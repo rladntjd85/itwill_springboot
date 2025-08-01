@@ -1,0 +1,17 @@
+<th:block xmlns:th="http://www.thymeleaf.org"
+		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+		layout:fragment="header">
+	<nav class="nav-bar">
+		<ul class="nav-center">
+			<!-- 상품 관련 메뉴 -->
+			<li><a th:href="@{/items/categories}">카테고리</a>
+			<li><a th:href="@{/items/list}">상품목록</a>
+			<li><a th:href="@{/items/new}">상품등록</a>
+		</ul>
+		<ul class="nav-right">
+			<!-- 회원 관련 메뉴 -->
+			<li><a th:href="@{/members/login}">로그인</a>
+			<li><a th:href="@{/members/register}">회원가입</a>
+		</ul>
+	</nav>
+</th:block>

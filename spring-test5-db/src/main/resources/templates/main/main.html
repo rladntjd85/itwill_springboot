@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+		layout:decorate="~{layouts/layout}">
+<head>
+	<!-- 개별페이지 CSS 영역 -->
+	<th:block layout:fragment="style">
+		<link rel="stylesheet" th:href="@{/css/item_main.css}" />
+	</th:block>
+</head>	
+<body>
+	<section layout:fragment="content">
+		<h3>메인페이지</h3>
+	</section>
+	
+	<th:block layout:fragment="script">
+		<script>
+			console.log("메인페이지의 자바스크립트 영역!");
+		</script>
+	</th:block>
+</body>
+</html>
