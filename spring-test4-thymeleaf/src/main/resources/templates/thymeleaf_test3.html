@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!-- <html> -->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<h1>thymeleaf_test3.html</h1>
+	<table border="1">
+		<thead>
+			<tr>
+				<th>순번</th>
+				<th>상품번호</th>
+				<th>상품명</th>
+				<th>상품설명</th>
+				<th>가격</th>
+				<th>수량</th>
+				<th>등록일시</th>
+			</tr>	
+		</thead>
+		<tbody>
+			<!-- 반복할 블럭의 시작 태그에 th:each 속성을 통해 복수개의 객체(배열, 컬렉션 등)를 반복 접근 가능 -->
+			<!-- 기본 문법 : th:each="1개 객체 꺼내서 저장할 이름 : ${복수개의 데이터가 저장된 객체명}" -->
+<!-- 			<tr th:each="item : ${itemList}"> tr 태그를 반복 블럭으로 설정 -->
+<!-- 				<td></td> -->
+<!-- 				<td th:text="${item.id}"></td> -->
+<!-- 				<td th:text="${item.itemNm}"></td> -->
+<!-- 				<td th:text="${item.itemDetail}"></td> -->
+<!-- 				<td th:text="${item.price}"></td> -->
+<!-- 				<td th:text="${item.stockQty}"></td> -->
+<!-- 				<td th:text="${item.regTime}"></td> -->
+
+<!-- 				th:object 속성을 활용하여 item.xxx 에서 item 생략 -->
+<!-- 				<th:block th:object="${item}"> -->
+<!-- 					<td></td> -->
+<!-- 					<td th:text="*{id}"></td> -->
+<!-- 					<td th:text="*{itemNm}"></td> -->
+<!-- 					<td th:text="*{itemDetail}"></td> -->
+<!-- 					<td th:text="*{price}"></td> -->
+<!-- 					<td th:text="*{stockQty}"></td> -->
+<!-- 					<td th:text="*{regTime}"></td> -->
+<!-- 				</th:block> -->
+<!-- 			</tr> -->
+
+			<!-- 반복 과정에서 사용되는 반복 상태 정보에(반복 횟수, 인덱스 등) 접근하는 방법 -->
+			<!-- 기본 문법 : th:each="1개 객체 꺼내서 저장할 이름, 반복상태객체명 : ${복수개의 데이터가 저장된 객체명}" -->
+			<tr th:each="item, status : ${itemList}">
+				<td>
+					<!-- ${반복상태객체명.속성명} 형태로 반복 상태값 활용 가능 -->
+					count : <th:block th:text="${status.count}"></th:block><br> <!-- status.count : 1부터 카운팅 -->
+					index : <th:block th:text="${status.index}"></th:block><br> <!-- status.index : 0부터 카운팅 -->
+				</td>
+				<td th:text="${item.id}"></td>
+				<td th:text="${item.itemNm}"></td>
+				<td th:text="${item.itemDetail}"></td>
+				<td th:text="${item.price}"></td>
+				<td th:text="${item.stockQty}"></td>
+				<td th:text="${item.regTime}"></td>
+			</tr>
+		</tbody>
+	</table>
+	<hr>
+		<table border="1">
+		<thead>
+			<tr>
+				<th>인덱스(0부터시작)</th>
+				<th>카운트(1부터시작)</th>
+				<th>전체사이즈</th>
+				<th>홀수여부</th>
+				<th>짝수여부</th>
+				<th>첫번째요소여부</th>
+				<th>마지막요소여부</th>
+			</tr>	
+		</thead>
+		<tbody>
+			<tr th:each="item, status : ${itemList}">
+				<td th:text="${status.index}"></td>
+				<td th:text="${status.count}"></td>
+				<td th:text="${status.size}"></td>
+				<td th:text="${status.odd}"></td>
+				<td th:text="${status.even}"></td>
+				<td th:text="${status.first}"></td>
+				<td th:text="${status.last}"></td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

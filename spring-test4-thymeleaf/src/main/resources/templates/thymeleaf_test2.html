@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- <html> -->
+<!-- 타임리프 문법을 사용하기 위한 네임스페이스 등록 -->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<h1>thymeleaf_test2.html</h1>
+	<!-- 단일 객체 데이터는 th:xxx="${객체명.필드명}" 형태로 접근 -->
+	<div>
+		상품번호 : <span th:text="${itemDTO.id}"></span>
+	</div>
+	<div>
+		상품명 : <span th:text="${itemDTO.itemNm}"></span>
+	</div>
+	<div>
+		상품상세설명 : <span th:text="${itemDTO.itemDetail}"></span>
+	</div>
+	<div>
+<!-- 		상품가격 : <span th:text="${itemDTO.price}"></span> -->
+		<!-- 데이터와 문자열을 결합하여 출력하는 방법 -->
+		<!-- 1) 연결연산자 활용 -->
+<!-- 		상품가격 : <span th:text="${itemDTO.price + ' 원'}"></span> -->
+		<!-- 2) || 기호 사이에 ${} 형식으로 데이터를 표현하고 일반 텍스트는 ${} 바깥에 기술 -->
+		상품가격 : <span th:text="|${itemDTO.price} 원22 ${itemDTO.price} 원|"></span>
+	</div>
+	<div>
+		상품수량 : <span th:text="|${itemDTO.stockQty} 개|"></span>
+	</div>
+	<div>
+		상품등록일시 : <span th:text="${itemDTO.regTime}"></span><br>
+		<!-- 자바의 java.time 패키지에 있는 LocalDateTime 클래스를 활용하여 날짜 및 시각 표현할 때 -->
+		<!-- 뷰페이지에서 "날짜T시각" 형태로 표시되며, 시각의 경우 밀리초, 마이크로노, 나노초 단위까지 표시됨 -->
+		<!-- 따라서, 해당 날짜 및 시각 형태에 대한 포맷팅을 통해 표시되는 형식을 변경해야함 -->
+		<!-- ${} 내부에 # 사용하여 타임리프 내장객체에 접근 가능(#temporals 객체의 format() 메서드 활용하여 포맷팅 가능) -->
+		<!-- ${#temporals.format(원본날짜객체, '날짜포맷문자열')} => java.time 패키지(LocalDate, LocalTime, LocalDateTime)을 대상으로 사용 가능 -->
+		<!-- 참고) Date, Calender 등의 전통적인 자바 날짜 및 시각 객체 포맷팅은 #dates.format() 활용 -->
+		상품등록일시(포맷팅) : <span th:text="${#temporals.format(itemDTO.regTime, 'yyyy-MM-dd HH:mm:ss')}"></span>
+	</div>
+	<hr>
+	
+	<!-- th:object 속성 사용하여 객체를 선택하면, 내부에서 *{필드명} 형태로 객체명 생략 가능 -->
+	<div th:object="${itemDTO}"> <!-- 현재 div 태그 블럭 내부에서 itemDTO 객체에 *{필드명} 만으로 접근 가능해진다! (객체명 생략 가능) -->
+		<div>
+			상품번호 : <span th:text="*{id}"></span>
+		</div>
+		<div>
+			상품명 : <span th:text="*{itemNm}"></span>
+		</div>
+		<div>
+			상품상세설명 : <span th:text="*{itemDetail}"></span>
+		</div>
+		<div>
+			상품가격 : <span th:text="|*{price} 원|"></span>
+		</div>
+		<div>
+			상품수량 : <span th:text="|*{stockQty} 개|"></span>
+		</div>
+		<div>
+			상품등록일시(포맷팅) : <span th:text="*{#temporals.format(regTime, 'yyyy-MM-dd HH:mm:ss')}"></span>
+		</div>
+		<!-- 여기까지가 ${itemDTO} 객체를 *{필드명} 형태로 접근 가능한 블럭 -->
+	</div>
+	<hr>
+
+	<!-- th:object 를 사용하기 위한 블럭으로 div 또는 span 등의 태그를 사용할 경우 불필요한 영역 태그아 추가됨(불필요한 DOM 생성됨) -->
+	<!-- 따라서, 타임리프에서는 블럭을 생성하는 용도의 가상 태그 <th:block> 태그를 별도로 제공함 -->	
+	<th:block th:object="${itemDTO}"> <!-- 현재 div 태그 블럭 내부에서 itemDTO 객체에 *{필드명} 만으로 접근 가능해진다! (객체명 생략 가능) -->
+		<div>
+			상품번호 : <span th:text="*{id}"></span>
+		</div>
+		<div>
+			상품명 : <span th:text="*{itemNm}"></span>
+		</div>
+		<div>
+			상품상세설명 : <span th:text="*{itemDetail}"></span>
+		</div>
+		<div>
+			상품가격 : <span th:text="|*{price} 원|"></span>
+		</div>
+		<div>
+			상품수량 : <span th:text="|*{stockQty} 개|"></span>
+		</div>
+		<div>
+			상품등록일시(포맷팅) : <span th:text="*{#temporals.format(regTime, 'yyyy-MM-dd HH:mm:ss')}"></span>
+		</div>
+	</th:block>
+	
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

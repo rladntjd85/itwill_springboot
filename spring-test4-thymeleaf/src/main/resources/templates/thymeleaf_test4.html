@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<h1>thymeleaf_test4.html</h1>
+	<table border="1">
+		<thead>
+			<tr>
+				<th>순번</th>
+				<th>상품번호</th>
+				<th>상품명</th>
+				<th>상품설명</th>
+				<th>가격</th>
+				<th>수량</th>
+				<th>등록일시</th>
+			</tr>	
+		</thead>
+		<tbody>
+			<tr th:each="item, status : ${itemList}">
+<!-- 				<td th:text="${status.count}"></td> -->
+				<!-- 
+				타임리프 조건문 - th:if(if문 역할) 와 th:unless(else문 역할) 활용(th:else, th:elseif 등은 없음)
+				th:if=${비교할조건식}       =>  조건식 결과가 참일때 블럭이 수행됨
+				th:unless=${비교할조건식}   =>  조건식 결과가 거짓일때 블럭이 수행됨
+				-->
+				<!-- th:if 사용하여 status.even 값이 true 이면 순번 뒤에 (짝수) 문자열 결합 -->
+				<!-- th:unless 사용하여 status.even 값이 false 이면 순번 뒤에 (홀수) 문자열 결합 -->
+<!-- 				<td th:if="${status.even}" th:text="|${status.count} (짝수)|"></td> -->
+<!-- 				<td th:unless="${status.even}" th:text="|${status.count} (홀수)|"></td> -->
+				<!-- 위의 코드의 문제점은 td 태그마다 if, unless 가 각각 표기되어 있으므로 별도의 태그처럼 보인다! -->
+				<!-- th:block 태그 활용하여 조건식을 표현할 블럭을 표시하는 것이 더 효율적 -->
+<!-- 				<td> -->
+<!-- 					<th:block th:if="${status.even}" th:text="|${status.count} (짝수)|"></th:block> -->
+<!-- 					<th:block th:unless="${status.even}" th:text="|${status.count} (홀수)|"></th:block> -->
+<!-- 				</td> -->
+				<!-- th:switch, th:case 를 활용하여 동일한 작업 수행 -->
+				<td th:switch="${status.even}">
+					<th:block th:case="true" th:text="|${status.count} (짝수2)|"></th:block>
+					<th:block th:case="false" th:text="|${status.count} (홀수2)|"></th:block>
+					<!-- 참고) th:case="*" 사용 시 자바 switch-case 문의 default 블럭 역할 수행(생략 가능) -->
+					<th:block th:case="*" th:text="|${status.count} (해당없음)|"></th:block>
+				</td>
+				<td th:text="${item.id}"></td>
+				<td th:text="${item.itemNm}"></td>
+				<td th:text="${item.itemDetail}"></td>
+				<td th:text="${item.price}"></td>
+				<td th:text="${item.stockQty}"></td>
+				<td th:text="${item.regTime}"></td>
+			</tr>
+		</tbody>
+	</table>
+	<hr>
+	<table border="1">
+		<thead>
+			<tr>
+				<th>순번</th>
+				<th>상품번호</th>
+				<th>상품명</th>
+				<th>상품설명</th>
+				<th>가격</th>
+				<th>수량</th>
+				<th>등록일시</th>
+			</tr>	
+		</thead>
+		<tbody>
+			<!-- 반복문에 th:if 를 조합하면 특정 조건일 때만 해당 문장 반복 실행 가능 -->
+			<!-- 예제1) status.even 값이 true 일 경우에만 tr 태그가 출력(= 짝수 항목만 필터링하여 출력) -->
+<!-- 			<tr th:each="item, status : ${itemList}" th:if="${status.even}"> -->
+			<!-- 예제2) item.price 값이 50000 이상일 경우에만 출력 -->
+			<tr th:each="item, status : ${itemList}" th:if="${item.price >= 50000}">
+				<td th:text="${status.count}"></td>
+				<td th:text="${item.id}"></td>
+				<td th:text="${item.itemNm}"></td>
+				<td th:text="${item.itemDetail}"></td>
+				<td th:text="${item.price}"></td>
+				<td th:text="${item.stockQty}"></td>
+				<td th:text="${item.regTime}"></td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

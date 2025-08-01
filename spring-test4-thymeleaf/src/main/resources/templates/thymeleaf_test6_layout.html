@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<!-- 
+	타임리프 th:replace 또는 th:include 를 사용하여 공통 페이지 내용 가져오기
+	th:replace 는 대상 페이지 내용을 현재 위치로 "대체"하고, th:include  는 대상 페이지 내용을 현재 위치 내부에 "포함"시킴
+	포함(대체) 대상 지정 시 th:replace="~{경로명/파일명}"
+	(참고> 기본 경로는 templates 이므로 templates 경로를 생략한 나머지 경로만 기술)
+	-->
+	<!-- 1) templates/fragments 디렉토리의 header.html 파일 내용 가져와서 "대체" 하기 -->
+	<!--    th:replace 속성이 지정된 header 태그가 제거되고, 가져온 내용으로 대체(덮어씀) -->
+<!-- 	<header th:replace="~{fragments/header}"></header> -->
+	<!-- 2) templates/fragments 디렉토리의 header.html 파일 내용 가져와서 "포함" 하기 -->
+	<!--    th:include 속성이 지정된 header 태그를 유지한 채, header 태그 내부에 가져온 내용을 포함시킴 -->
+<!-- 	<header th:include="~{fragments/header}"></header> -->
+	<!-- 3) th:include 와 기본 동작은 비슷하나, 미묘한 차이가 있는 th:insert 도 사용 가능 -->
+	<header th:insert="~{fragments/header}"></header>
+	<hr>
+	
+	<main>
+		<h1>본문 영역</h1>
+	</main>
+	
+	<hr>
+<!-- 	<footer th:include="~{fragments/footer}"></footer> -->
+
+	<!-- 대상 포함시킬 때 ~{경로명/파일명::프래그먼트명} 형태로 지정 시 -->
+	<!-- 대상 파일 내에서 th:fragment="프래그먼트명" 으로 지정된 부분을 현재 위치로 가져옴 -->
+	<footer th:include="~{fragments/footer::footerFragment}"></footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- html 태그에 Layout Dialect 로 작성된 레이아웃 페이지를 상속받도록 layout:decorate="~{레이아웃페이지파일명}" 형태로 지정 -->
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+		layout:decorate="~{thymeleaf_test7_layout}">
+<!-- 별도의 <head> 태그 내용 추가가 불필요할 경우 <body> 태그만 사용하여 실제 보여질 컨텐츠 영역만 작성 -->		
+<body>
+	<!-- 레이아웃 사용하여 실제 컨텐츠가 표시될 영역의 내용만 작성(이 때, layout:fragment="프래그먼트명" 지정 필수!)  -->
+	<section layout:fragment="content">
+		<h1>개별 페이지의 본문 영역</h1>
+	</section>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

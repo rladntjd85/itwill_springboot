@@ -1,0 +1,11 @@
+<!-- th:fragment 속성이 적용된 블럭은 레이아웃에서 포함시킬 경우 선택 가능한 블럭으로 취급됨 -->
+<!-- 아래 div 태그 블럭 1개는 th:include, th:replace 등에서 ~{fragments/footer::footerFragment} 형태로 지정 시 포함됨 -->
+<div th:fragment="footerFragment">
+	<h3>footer 영역</h3>
+</div>
+
+<!-- th:fragment 속성이 적용되지 않은 내용들은 프래그먼트 대상을 지정하여 포함할 때 제외됨 -->
+<!-- 아래 div 태그 블럭 1개는 th:include, th:replace 등에서 ~{fragments/footer::footerFragment} 형태로 지정 시 포함되지 않음 -->
+<div>
+	<h4>footer 영역 두번째 내용</h4>
+</div>

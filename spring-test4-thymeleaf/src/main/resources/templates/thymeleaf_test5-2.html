@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<h1>thymeleaf_test5-2.html</h1>
+	<h3>타임리프 하이퍼링크 파라미터 확인</h3>
+	<!-- URL 파라미터로 전달받아 컨트롤러에서 Model 객체에 저장한 Map 객체값 확인 -->
+	<div th:text="|params.param1 : ${params.param1}|"></div>
+	<div th:text="|params.param2 : ${params.param2}|"></div>
+	<div th:text="|params.param3 : ${params.param3}|"></div>
+	<hr>
+	<!-- URL 파라미터에 접근 방법 : ${param.파라미터명} -->	
+	<div th:text="|param.param1 : ${param.param1}|"></div>
+	<div th:text="|param.param2 : ${param.param2}|"></div>
+	<div th:text="|param.param3 : ${param.param3}|"></div>
+	<hr>
+	<!-- 세션에 접근 방법 : ${session.속성명} -->
+	<div th:text="|session.id : ${session.id}|"></div>
+	
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+	th:fragment="layout">
+<head>
+<meta charset="UTF-8">
+<title>test6-2_layout</title>
+</head>
+<body>
+	<!-- 공통 헤더 -->
+	<header th:include="~{fragments/header}"></header>
+	<hr>
+		
+	<!-- 본문 -->
+	<!-- 개별 페이지 내용(= 실제 본문)이 표시될 영역 -->
+<!-- 	<main th:replace="~{thymeleaf_test6-2::content}"></main> -->
+	<!-- 현재 파일의 내용이 thymeleaf_test6-2.html 에 포함(대체)될 경우 프래그먼트 지정 시 파일명 생략하고 프래그먼트명만 지정 가능 -->
+<!-- 	<main th:replace="~{::content}"></main> -->
+
+<!-- 	<div th:fragment="content">...내용생략...</div> 부분을 현재 위치에 포함시킬 경우 -->
+	<!-- 1) th:include 사용 시 th:fragment 속성이 지정된 <div> 태그는 제외하고 나머지 내용이 포함됨 -->
+<!-- 	<main th:include="~{::content}"></main> -->
+	<!-- 2) th:insert 사용 시 th:fragment 속성이 지정된 <div> 태그를 포함한 내용이 포함됨 -->
+	<main th:insert="~{::content}"></main>
+	
+	<hr>
+	<!-- 공통 푸터 -->
+	<footer th:include="~{fragments/footer::footerFragment}"></footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

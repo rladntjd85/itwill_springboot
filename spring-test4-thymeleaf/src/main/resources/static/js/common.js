@@ -1,0 +1,1 @@
+console.log("공통 JS");

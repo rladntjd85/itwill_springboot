@@ -1,0 +1,45 @@
+<!-- test7 의 전체 레이아웃 구성을 제공하는 페이지 -->
+<!-- Layout Dialect 사용을 위해 공통 레이아웃을 구성 후 실제 개별 컨텐츠가 포함될 영역만 layout:fragment="컨텐츠프래그먼트명" 으로 표시 -->
+<!-- 이 때, 레이아웃 페이지 내에서 <head> 태그를 통한 부가 정보들도 작성함(실제 컨텐츠 영역에서는 공통 부가 정보 제거) -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="UTF-8">
+<title>test6-2_layout</title>
+</head>
+<body>
+	<!-- 공통 헤더 -->
+	<header th:include="~{fragments/header_test7}"></header>
+	<hr>
+		
+	<!-- 본문 -->
+<!-- 	<main layout:fragment="content"></main> -->
+	<main>
+		<th:block layout:fragment="content"></th:block>
+	</main>
+	
+	<hr>
+	<!-- 공통 푸터 -->
+	<footer th:include="~{fragments/footer_test7}"></footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
