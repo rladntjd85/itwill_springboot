@@ -15,7 +15,7 @@ public enum ItemSellStatus {
 	
 	public String getCode() {
 		// 현재 enum 객체의 name() 메서드 호출 시 자동으로 enum 상수값 리턴됨
-		return this.name(); // enum 상수값을 외부로 리턴
+		return this. name(); // enum 상수값을 외부로 리턴
 	}
 }
 

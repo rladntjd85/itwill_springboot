@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+		layout:decorate="~{layouts/layout}">
+<head>
+	<!-- 개별페이지 CSS 영역 -->
+	<th:block layout:fragment="style">
+		<link rel="stylesheet" th:href="@{/css/item_main.css}" />
+		<style>
+			#imgPreviewArea {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				width: 100%;
+			}
+			
+			.div-img-preview {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+		
+			.img-preview {
+				width: 100px;
+				height: 100px;
+				display: block;
+			}
+		</style>
+	</th:block>
+</head>	
+<body>
+	<section layout:fragment="content">
+		<h3>상품 등록</h3>
+		<div id="registForm">
+			<!-- 컨트롤러로부터 DTO 객체를 전달받을 경우 form 태그 등에서 th:object 속성으로 전달받은 객체를 선택하면 -->
+			<!-- 해당 form 내에서 name 속성 지정 생략도 가능하고, DTO 객체 값들을 폼에서 활용할 수 있음(Validation check 등) -->
+			<!-- 파일 업로드를 위한 enctype 설정 -->
+<!-- 			<form th:action="@{/items}" th:object="${itemDTO}" method="post"> -->
+			<form th:action="@{/items}" th:object="${itemDTO}" method="post" enctype="multipart/form-data">
+				<table border="1">
+					<tr>
+						<th>상품명</th>
+						<td>
+							<!-- 기본적으로 입력 요소의 name 속성을 지정하여 전송할 파라미터 이름을 지정 -->
+<!-- 							<input type="text" name="itemNm"> -->
+							<!-- 입력요소 태그에 th:field 속성을 사용하여 해당 입력 요소에 DTO 객체 필드 바인딩(name 속성 생략 가능) -->
+							<input type="text" th:field="*{itemNm}" required> <!-- name 속성값이 자동으로 itemNm 필드명과 동일하게 설정됨 -->
+							<!-- Validation 체크 실패로 인해 다시 입력페이지로 포워딩됐을 때 실패한 항목에 대한 처리(오류 처리) 수행 -->
+							<!-- th:if 활용하여 에러 발생 여부 체크(타임리프 내장객체 fields 의 hasErrors() 메서드로 검사 필드명 전달) -->
+							<!-- th:errors 속성 활용하여 출력할 에러메세지가 포함되어 있는 객체의 필드 지정 -->
+							<div th:if="${#fields.hasErrors('itemNm')}" th:errors="*{itemNm}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>가격</th>
+						<td>
+							<input type="number" th:field="*{price}" required>
+							<div th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>수량</th>
+						<td>
+							<input type="number" th:field="*{stockQty}" required>
+							<div th:if="${#fields.hasErrors('stockQty')}" th:errors="*{stockQty}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>카테고리</th>
+						<td>
+							<select th:field="*{category}">
+								<option value="">카테고리 선택</option>
+								<!-- 타임리프 템플릿 페이지에서 자바 클래스(enum 포함)를 직접 참조하는 방법 -->
+								<!-- ${T(패키지명.클래스명).메서드명()} -->
+								<!-- enum 타입의 values() 메서드 호출하여 모든 enum 값을 목록으로 표시(반복문 활용) -->
+								<!-- value 속성값은 반복 시 전달받은 enum 값을 그대로 사용, text 속성값은 enum 값의 label 필드값 사용 -->
+								<option th:each="cat : ${T(com.itwillbs.db.items.constant.ItemCategory).values()}"
+										th:value="${cat}"
+										th:text="${cat.label}"></option>
+							</select>
+							<div th:if="${#fields.hasErrors('category')}" th:errors="*{category}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>판매상태</th>
+						<td>
+							<select th:field="*{sellStatus}">
+								<option value="">판매상태 선택</option>
+								<option th:each="status : ${T(com.itwillbs.db.items.constant.ItemSellStatus).values()}"
+										th:value="${status}"
+										th:text="${status.label}"></option>
+							</select>
+							<div th:if="${#fields.hasErrors('sellStatus')}" th:errors="*{sellStatus}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>상세설명</th>
+						<td>
+							<textarea th:field="*{itemDetail}" rows="4" cols="20"></textarea>
+							<div th:if="${#fields.hasErrors('itemDetail')}" th:errors="*{itemDetail}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>첨부파일<br>(최대5개)</th>
+						<td>
+							<input type="file" id="custom-file-input" name="itemImgFiles" accept="image/*" multiple>
+							<div id="imgPreviewArea"></div>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2"><input type="submit" value="등록"></td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</section>
+	
+	<!-- 개별 페이지의 자바스크립트 영역 -->
+	<th:block layout:fragment="script">
+		<script>
+			$(function() {
+				// 첨부파일을 하나도 선택하지 않고 요청 시 서버로부터 전달받은 오류메세지 출력하기
+// 				const msg = "${errorMessage}";
+				// => 주의! 타임리프와 자바스크립트를 함께 사용하는 페이지에서 ${} 활용하여 서버로부터 전달받은 속성에 접근 시
+				//    정상적인 파싱이 수행되지 않고 ${} 기호가 단순 문자열로 취급되어 출력됨
+				// => 타임리프 객체 접근 문법 앞 뒤로 [[ 기호와 ]] 기호를 사용하여 감싸면 정상적인 파싱 가능
+				const msg = "[[${errorMessage}]]";
+				if(msg && msg.trim() != "") {
+					alert(msg);
+				}
+				
+				// =============================================
+				$("#custom-file-input").change(function(event) {
+					// 파일 선택 요소의 선택된 파일 목록 객체 가져오기
+					const files = event.target.files;
+					console.log(files);
+
+					// 참고) 이미지 파일만 필터링(다른 형식의 파일까지 선택했을 경우 미리보기 대상을 이미지 파일로 한정하기 위함)
+					let imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
+					console.log(imageFiles);
+					
+					// 임시) 전체 파일 중에서 이미지 파일 목록만 사용
+					// 선택된 파일 갯수 제한
+					// => x개를 초과하면 경고 출력 후 x개 파일을 제외한 나머지 파일 버림
+					const fileCountLimit = 5;
+					if(imageFiles.length > fileCountLimit) {
+						alert("최대 " + fileCountLimit + " 개의 이미지만 첨부 가능!");
+						
+						imageFiles = imageFiles.slice(0, fileCountLimit); // 배열에서 0부터 지정된 갯수만큼 자르고 나머지 버림
+					}
+					
+					console.log(imageFiles);
+					// -----------------------------------------------------------
+					// 기존 프리뷰 영역 초기화
+					$("#imgPreviewArea").html("");
+					
+					// 기존 파일 선택 영역을 교체할 새로운 파일 목록 객체 변경에 사용되는 DataTransfer 객체 생성
+					let newFileList = new DataTransfer();
+					
+					// 이미지 파일 갯수만큼 반복문 수행
+					// 익명함수 파라미터로 파일 요소 인덱스 및 파일 객체 전달받기
+					$.each(imageFiles, function(index, file) {
+						// 현재 파일을 새로운 DataTransfer 객체에 추가
+						newFileList.items.add(file);
+						// ----------------------------------
+						// FileReader 객체 생성 후 파일 읽어와서 미리보기 영역에 표시
+						let reader = new FileReader();
+						
+						// 파일 읽어오는 과정에서 파일 로딩 완료 시 이벤트 핸들링
+						reader.onload = function(e) {
+							console.log(e.target.result);
+							
+							// 미리보기 요소 생성 후 미리보기 영역에 추가
+							const imgPreview = $(`<div class="div-img_preview">`)
+											.append(`<img src="${e.target.result}" alt="미리보기" class="img-preview">`);
+							
+							// 미리보기 영역에 추가
+							$("#imgPreviewArea").append(imgPreview);
+						}
+						
+						// 파일 읽어오기
+						// => 이미지 파일 등 Base64 형식 인코딩 된 데이터를 읽어오기 위해 readAsDataURL() 메서드 활용
+						//    (미리보기나 AJAX 활용한 파일 업로드 등에 활용 가능)
+						reader.readAsDataURL(file);
+					});
+					// -----------------------------------------------------------
+					// 파일 선택 요소 객체의 files 속성에 접근하여 새로운 파일 목록으로 업데이트					
+					$("#custom-file-input")[0].files = newFileList.files;
+					
+				});
+			});
+		</script>
+	</th:block>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
