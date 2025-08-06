@@ -1,12 +1,16 @@
 package com.itwillbs.db.items.controller;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,7 +50,7 @@ public class ItemController {
 	// 업로드 파일들을 묶음으로 관리할 List<MultipartFiles> 타입 파라미터 선언
 	@PostMapping("")
 	public String registItem(@ModelAttribute("itemDTO") @Valid ItemDTO itemDTO, BindingResult bindingResult, 
-			@RequestParam("itemImgFiles") List<MultipartFile> itemImgFiles, Model model) {
+			@RequestParam("itemImgFiles") List<MultipartFile> itemImgFiles, Model model) throws IOException {
 //		log.info(">>>>>>>>>>>> itemDTO : " + itemDTO);
 		
 		// BindingResult 객체의 각각의 메서드 호출하여 입력값 검증 결과 얻어올 수 있음
@@ -75,11 +79,31 @@ public class ItemController {
 		Long itemId = itemService.registItem(itemDTO, itemImgFiles);
 		log.info(">>>>>>>>>>>> itemId : " + itemId);
 		
+		// 등록 과정에서 리턴받은 상품아이디값을 /items 경로에 결합하여 상품 상세정보 조회 페이지 리다이렉트
+		return "redirect:/items/" + itemId;
+	}
+	// ============================================================
+	// 상품 상세정보 조회 요청 처리
+	// => http://localhost:8085/items/1002 형태로 /items 뒤의 경로로 상품 아이디 전달됨
+	@GetMapping("/{itemId}")
+	public String itemDetail(@PathVariable("itemId") Long itemId, Model model) {
+		// ItemService - getItem() 메서드 호출하여 상품 1개 상세정보 조회 요청
+		// => 파라미터 : 상품번호(Long)   리턴타입 : ItemDTO(itemDTO)
+		ItemDTO itemDTO = itemService.getItem(itemId);
+		model.addAttribute("itemDTO", itemDTO);
 		
 		
-		return "redirect:/items/list";
+		return "/items/item_detail";
 	}
 	
+	// 상품 첨부파일 다운로드 요청 처리
+	@GetMapping("/download/{itemImgId}")
+	public ResponseEntity<Resource> getFile(@PathVariable("itemImgId") Long itemImgId) {
+		
+		return null;
+	}
+	
+	// ============================================================
 	
 }
 
