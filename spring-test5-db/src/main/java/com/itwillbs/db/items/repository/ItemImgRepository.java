@@ -7,5 +7,6 @@ import com.itwillbs.db.items.entity.ItemImg;
 
 @Repository
 public interface ItemImgRepository extends JpaRepository<ItemImg, Long> {
-
+	
+	
 }
