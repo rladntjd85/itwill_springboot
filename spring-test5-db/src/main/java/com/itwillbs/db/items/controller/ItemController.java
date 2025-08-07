@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.itwillbs.db.items.constant.ItemCategory;
 import com.itwillbs.db.items.dto.ItemDTO;
+import com.itwillbs.db.items.dto.ItemImgDTO;
+import com.itwillbs.db.items.service.ItemImgService;
 import com.itwillbs.db.items.service.ItemService;
 
 import jakarta.validation.Valid;
@@ -28,9 +30,11 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class ItemController {
 	private final ItemService itemService;
+	private final ItemImgService itemImgService;
 	
-	public ItemController(ItemService itemService) {
+	public ItemController(ItemService itemService, ItemImgService itemImgService) {
 		this.itemService = itemService;
+		this.itemImgService = itemImgService;
 	}
 	// ----------------------------------------------
 	@GetMapping("/new")		
@@ -99,11 +103,43 @@ public class ItemController {
 	// 상품 첨부파일 다운로드 요청 처리
 	@GetMapping("/download/{itemImgId}")
 	public ResponseEntity<Resource> getFile(@PathVariable("itemImgId") Long itemImgId) {
+		log.info("INFO >>>>>>>>>>>>>>> itemImgId : " + itemImgId); 
+		log.warn("WARN >>>>>>>>>>>>>>> itemImgId : " + itemImgId); 
+		log.error("ERROR >>>>>>>>>>>>>>> itemImgId : " + itemImgId); 
+		log.fatal("FATAL >>>>>>>>>>>>>>> itemImgId : " + itemImgId); 
 		
-		return null;
+		// ItemImgService - getItemImg() 메서드 호출하여 상품이미지 1개 정보 조회 요청
+		// => 파라미터 : 상품이미지번호(itemImgId)   리턴타입 : ItemImgDTO(itemImgDTO)
+//		ItemImgDTO itemImgDTO = itemImgService.getItemImg(itemImgId);
+//		System.out.println(itemImgDTO);
+		
+		// 권한 확인 등의 코드.... 생략
+		
+		// ItemImgService - getDownloadResponse() 메서드 호출하여 다운로드 파일 요청
+		// => 파라미터 : ItemImgDTO 객체   리턴타입 : ResponseEntity<Resource>(responseEntity)
+//		ResponseEntity<Resource> responseEntity = itemImgService.getDownloadResponse(itemImgDTO);
+		// => 파라미터 : 상품이미지번호(itemImgId)   리턴타입 : ResponseEntity<Resource>(responseEntity)
+//		ResponseEntity<Resource> responseEntity = itemImgService.getDownloadResponse(itemImgId);
+		return itemImgService.getDownloadResponse(itemImgId);
 	}
 	
 	// ============================================================
+//	@ResponseBody
+//	@GetMapping("/list")
+//	public List<ItemDTO> getItemList(Model model) {
+//		// ItemService - getItemlist() 메서드 호출하여 상품목록 조회 요청
+//		// => 파라미터 : 없음   리턴타입 : List<ItemDTO>(itemList)
+//		return itemService.getItemList();
+//	}
+	@GetMapping("/list")
+	public String getItemList(Model model) {
+		// ItemService - getItemlist() 메서드 호출하여 상품목록 조회 요청
+		// => 파라미터 : 없음   리턴타입 : List<ItemDTO>(itemList)
+		List<ItemDTO> itemDTOList = itemService.getItemList();
+		model.addAttribute("itemDTOList", itemDTOList);
+		
+		return "/items/item_list";
+	}
 	
 }
 

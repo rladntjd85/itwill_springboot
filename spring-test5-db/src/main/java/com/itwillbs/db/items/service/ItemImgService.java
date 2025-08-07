@@ -13,14 +13,19 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.db.commons.util.FileUtils;
+import com.itwillbs.db.items.dto.ItemImgDTO;
 import com.itwillbs.db.items.entity.Item;
 import com.itwillbs.db.items.entity.ItemImg;
 import com.itwillbs.db.items.repository.ItemImgRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ItemImgService {
@@ -107,6 +112,29 @@ public class ItemImgService {
 		
 		// ItemImgRepository - saveAll() 메서드 호출하여 첨부파일 리스트를 한꺼번에 INSERT 요청
 		itemImgRepository.saveAll(itemImgList);
+	}
+	
+	// 상품이미지 정보 조회 요청
+	@Transactional(readOnly = true)
+	public ItemImgDTO getItemImg(Long itemImgId) {
+		ItemImg itemImg = itemImgRepository.findById(itemImgId)
+				.orElseThrow(() -> new EntityNotFoundException("해당 이미지가 존재하지 않습니다!"));
+		return ItemImgDTO.fromEntity(itemImg);
+	}
+
+	// 첨부파일 다운로드를 위한 응답 데이터 생성 요청
+	@Transactional(readOnly = true)
+	public ResponseEntity<Resource> getDownloadResponse(Long itemImgId) {
+		ItemImg itemImg = itemImgRepository.findById(itemImgId)
+				.orElseThrow(() -> new EntityNotFoundException("해당 이미지가 존재하지 않습니다!"));
+		
+		// FileUtils 클래스의 createDownloadResponse() 메서드 호출하여 첨부파일 다운로드 응답 데이터 생성 요청
+		// => 파라미터 : ItemImgDTO 객체  리턴타입 : ResponseEntity<Resource>
+		ResponseEntity<Resource> responseEntity = fileUtils.createDownloadResponse(ItemImgDTO.fromEntity(itemImg));
+		
+		// 다운로드 횟수 증가시키려면 ItemImg 엔티티의 다운로드 횟수 필드값 변경(UPDATE) - 더디체킹에 의해 DB 데이터가 업데이트됨(생략)
+		
+		return responseEntity;
 	}
 	
 	

@@ -12,6 +12,7 @@ import com.itwillbs.db.items.dto.ItemDTO;
 import com.itwillbs.db.items.dto.ItemImgDTO;
 import com.itwillbs.db.items.entity.Item;
 import com.itwillbs.db.items.entity.ItemImg;
+import com.itwillbs.db.items.mapper.ItemMapper;
 import com.itwillbs.db.items.repository.ItemRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -22,10 +23,12 @@ import jakarta.validation.Valid;
 public class ItemService {
 	private final ItemRepository itemRepository;
 	private final ItemImgService itemImgService;
+	private final ItemMapper itemMapper;
 
-	public ItemService(ItemRepository itemRepository, ItemImgService itemImgService) {
+	public ItemService(ItemRepository itemRepository, ItemImgService itemImgService, ItemMapper itemMapper) {
 		this.itemRepository = itemRepository;
 		this.itemImgService = itemImgService;
+		this.itemMapper = itemMapper;
 	}
 	// -------------------------------------------------
 	// 상품 정보 등록 요청
@@ -71,6 +74,20 @@ public class ItemService {
 				.collect(Collectors.toList())); // ItemImgDTO 객체를 담는 List 객체 형태로 반환
 		
 		return itemDTO;
+	}
+	
+	
+	public List<ItemDTO> getItemList() {
+		// ItemMapper - findAllItems() 메서드 호출하여 마이바티스로 상품 목록 조회 요청
+		// 리턴타입 : List<Item>
+//		List<Item> itemList = itemMapper.findAllItems();
+//		
+//		// List<Item> -> List<ItemDTO> 변환
+//		return itemList.stream()
+//				.map(ItemDTO::fromEntity)
+//				.collect(Collectors.toList());
+		
+		return itemMapper.findAllItems();
 	}
 	
 	

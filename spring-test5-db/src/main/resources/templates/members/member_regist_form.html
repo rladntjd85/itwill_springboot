@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+		layout:decorate="~{layouts/layout}">
+<head>
+	<!-- 개별페이지 CSS 영역 -->
+	<th:block layout:fragment="style">
+		<link rel="stylesheet" th:href="@{/css/item_main.css}" />
+		<style>
+			#imgPreviewArea {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				width: 100%;
+			}
+			
+			.div-img-preview {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+		
+			.img-preview {
+				width: 100px;
+				height: 100px;
+				display: block;
+			}
+		</style>
+	</th:block>
+</head>	
+<body>
+	<section layout:fragment="content">
+		<h3>상품 등록</h3>
+		<div id="registForm">
+			<form th:action="@{/members}" th:object="${memberDTO}" method="post">
+				<table border="1">
+					<tr>
+						<th>이름</th>
+						<td>
+							<input type="text" th:field="*{name}" required>
+							<div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>E-Mail</th>
+						<td>
+							<input type="text" th:field="*{email}" required>
+							<div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>비밀번호</th>
+						<td>
+							<input type="password" th:field="*{passwd}" required>
+							<div th:if="${#fields.hasErrors('passwd')}" th:errors="*{passwd}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<th>주소</th>
+						<td>
+							<input type="text" th:field="*{address}" required>
+							<div th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="error_msg"></div>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2"><input type="submit" value="등록"></td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</section>
+	
+	<!-- 개별 페이지의 자바스크립트 영역 -->
+	<th:block layout:fragment="script">
+		<script>
+			$(function() {
+				// 첨부파일을 하나도 선택하지 않고 요청 시 서버로부터 전달받은 오류메세지 출력하기
+// 				const msg = "${errorMessage}";
+				// => 주의! 타임리프와 자바스크립트를 함께 사용하는 페이지에서 ${} 활용하여 서버로부터 전달받은 속성에 접근 시
+				//    정상적인 파싱이 수행되지 않고 ${} 기호가 단순 문자열로 취급되어 출력됨
+				// => 타임리프 객체 접근 문법 앞 뒤로 [[ 기호와 ]] 기호를 사용하여 감싸면 정상적인 파싱 가능
+				const msg = "[[${errorMessage}]]";
+				if(msg && msg.trim() != "") {
+					alert(msg);
+				}
+				
+				// =============================================
+				$("#custom-file-input").change(function(event) {
+					// 파일 선택 요소의 선택된 파일 목록 객체 가져오기
+					const files = event.target.files;
+					console.log(files);
+
+					// 참고) 이미지 파일만 필터링(다른 형식의 파일까지 선택했을 경우 미리보기 대상을 이미지 파일로 한정하기 위함)
+					let imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
+					console.log(imageFiles);
+					
+					// 임시) 전체 파일 중에서 이미지 파일 목록만 사용
+					// 선택된 파일 갯수 제한
+					// => x개를 초과하면 경고 출력 후 x개 파일을 제외한 나머지 파일 버림
+					const fileCountLimit = 5;
+					if(imageFiles.length > fileCountLimit) {
+						alert("최대 " + fileCountLimit + " 개의 이미지만 첨부 가능!");
+						
+						imageFiles = imageFiles.slice(0, fileCountLimit); // 배열에서 0부터 지정된 갯수만큼 자르고 나머지 버림
+					}
+					
+					console.log(imageFiles);
+					// -----------------------------------------------------------
+					// 기존 프리뷰 영역 초기화
+					$("#imgPreviewArea").html("");
+					
+					// 기존 파일 선택 영역을 교체할 새로운 파일 목록 객체 변경에 사용되는 DataTransfer 객체 생성
+					let newFileList = new DataTransfer();
+					
+					// 이미지 파일 갯수만큼 반복문 수행
+					// 익명함수 파라미터로 파일 요소 인덱스 및 파일 객체 전달받기
+					$.each(imageFiles, function(index, file) {
+						// 현재 파일을 새로운 DataTransfer 객체에 추가
+						newFileList.items.add(file);
+						// ----------------------------------
+						// FileReader 객체 생성 후 파일 읽어와서 미리보기 영역에 표시
+						let reader = new FileReader();
+						
+						// 파일 읽어오는 과정에서 파일 로딩 완료 시 이벤트 핸들링
+						reader.onload = function(e) {
+							console.log(e.target.result);
+							
+							// 미리보기 요소 생성 후 미리보기 영역에 추가
+							const imgPreview = $(`<div class="div-img_preview">`)
+											.append(`<img src="${e.target.result}" alt="미리보기" class="img-preview">`);
+							
+							// 미리보기 영역에 추가
+							$("#imgPreviewArea").append(imgPreview);
+						}
+						
+						// 파일 읽어오기
+						// => 이미지 파일 등 Base64 형식 인코딩 된 데이터를 읽어오기 위해 readAsDataURL() 메서드 활용
+						//    (미리보기나 AJAX 활용한 파일 업로드 등에 활용 가능)
+						reader.readAsDataURL(file);
+					});
+					// -----------------------------------------------------------
+					// 파일 선택 요소 객체의 files 속성에 접근하여 새로운 파일 목록으로 업데이트					
+					$("#custom-file-input")[0].files = newFileList.files;
+					
+				});
+			});
+		</script>
+	</th:block>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
