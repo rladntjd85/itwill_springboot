@@ -34,6 +34,10 @@
 				width: 100px;
 				height: 100px;
 			}
+			
+			.itemTr:hover {
+				background-color: orange;
+			}
 		</style>
 	</th:block>
 </head>	
@@ -47,24 +51,28 @@
 				<th>상품가격</th>
 				<th>수량</th>
 				<th>등록일시</th>
-				<th>첨부파일</th>
+<!-- 				<th>첨부파일</th> -->
 			</tr>
-			<tr th:each="itemDTO : ${itemDTOList}" th:object="${itemDTO}">
+			<!-- 상품목록 1개 클릭 시 이벤트 핸들링 -->
+			<!-- 상품 번호에 접근하기 위해 th:data-xxx 속성을 사용하여 상품번호를 tr 태그 등에 포함시킬 수 있다! -->
+			<!-- 이 때, HTML5 표준 네이밍 규칙에 따라 소문자, 숫자, 하이픈 조합 가능 -->
+			<!-- 주의! data-xxx 의 xxx 이 xxx-yyy 형태일 경우 JS/jQuery 에서 접근 시 Camel-case 형태로 자동 변환됨 -->
+			<tr th:each="itemDTO : ${itemDTOList}" th:object="${itemDTO}" class="itemTr" th:data-item-id="*{id}">
 				<td th:text="*{id}"></td>
 				<td th:text="*{itemNm}"></td>
 				<td th:text="*{price}"></td>
 				<td th:text="*{stockQty}"></td>
 				<td th:text="*{regTime}"></td>
-				<td>
-					<th:block th:each="itemImgDTO : *{itemImgDTOList}">
-						<div th:text="${itemImgDTO.id}"></div>
-						<div th:text="${itemImgDTO.imgLocation}"></div>
-						<div th:text="${itemImgDTO.imgName}"></div>
-						<div th:text="${itemImgDTO.originalImgName}"></div>
-						<div th:text="${itemImgDTO.repImgYn}"></div>
-						<hr>
-					</th:block>
-				</td>
+<!-- 				<td> -->
+<!-- 					<th:block th:each="itemImgDTO : *{itemImgDTOList}"> -->
+<!-- 						<div th:text="${itemImgDTO.id}"></div> -->
+<!-- 						<div th:text="${itemImgDTO.imgLocation}"></div> -->
+<!-- 						<div th:text="${itemImgDTO.imgName}"></div> -->
+<!-- 						<div th:text="${itemImgDTO.originalImgName}"></div> -->
+<!-- 						<div th:text="${itemImgDTO.repImgYn}"></div> -->
+<!-- 						<hr> -->
+<!-- 					</th:block> -->
+<!-- 				</td> -->
 			</tr>
 		</table>
 	</section>
@@ -73,74 +81,17 @@
 	<th:block layout:fragment="script">
 		<script>
 			$(function() {
-				// 첨부파일을 하나도 선택하지 않고 요청 시 서버로부터 전달받은 오류메세지 출력하기
-// 				const msg = "${errorMessage}";
-				// => 주의! 타임리프와 자바스크립트를 함께 사용하는 페이지에서 ${} 활용하여 서버로부터 전달받은 속성에 접근 시
-				//    정상적인 파싱이 수행되지 않고 ${} 기호가 단순 문자열로 취급되어 출력됨
-				// => 타임리프 객체 접근 문법 앞 뒤로 [[ 기호와 ]] 기호를 사용하여 감싸면 정상적인 파싱 가능
-				const msg = "[[${errorMessage}]]";
-				if(msg && msg.trim() != "") {
-					alert(msg);
-				}
-				
-				// =============================================
-				$("#custom-file-input").change(function(event) {
-					// 파일 선택 요소의 선택된 파일 목록 객체 가져오기
-					const files = event.target.files;
-					console.log(files);
+				// 상품 목록에서 상품 클릭 시 상세정보 조회 요청
+				$(".itemTr").click(function() {
+					// 클릭한 tr 태그의 th:data-id 속성값 가져오기
+// 					const itemId = $(this).data("id");
+					// th:data-item-id 속성값 가져오기
+// 					const itemId = $(this).data("itemId"); 
+// 					console.log("itemId(item-id) : " + itemId);
+					const itemId = this.dataset.itemId;
+// 					console.log("itemId(this.dataset.itemId) : " + itemId);
 
-					// 참고) 이미지 파일만 필터링(다른 형식의 파일까지 선택했을 경우 미리보기 대상을 이미지 파일로 한정하기 위함)
-					let imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
-					console.log(imageFiles);
-					
-					// 임시) 전체 파일 중에서 이미지 파일 목록만 사용
-					// 선택된 파일 갯수 제한
-					// => x개를 초과하면 경고 출력 후 x개 파일을 제외한 나머지 파일 버림
-					const fileCountLimit = 5;
-					if(imageFiles.length > fileCountLimit) {
-						alert("최대 " + fileCountLimit + " 개의 이미지만 첨부 가능!");
-						
-						imageFiles = imageFiles.slice(0, fileCountLimit); // 배열에서 0부터 지정된 갯수만큼 자르고 나머지 버림
-					}
-					
-					console.log(imageFiles);
-					// -----------------------------------------------------------
-					// 기존 프리뷰 영역 초기화
-					$("#imgPreviewArea").html("");
-					
-					// 기존 파일 선택 영역을 교체할 새로운 파일 목록 객체 변경에 사용되는 DataTransfer 객체 생성
-					let newFileList = new DataTransfer();
-					
-					// 이미지 파일 갯수만큼 반복문 수행
-					// 익명함수 파라미터로 파일 요소 인덱스 및 파일 객체 전달받기
-					$.each(imageFiles, function(index, file) {
-						// 현재 파일을 새로운 DataTransfer 객체에 추가
-						newFileList.items.add(file);
-						// ----------------------------------
-						// FileReader 객체 생성 후 파일 읽어와서 미리보기 영역에 표시
-						let reader = new FileReader();
-						
-						// 파일 읽어오는 과정에서 파일 로딩 완료 시 이벤트 핸들링
-						reader.onload = function(e) {
-							console.log(e.target.result);
-							
-							// 미리보기 요소 생성 후 미리보기 영역에 추가
-							const imgPreview = $(`<div class="div-img_preview">`)
-											.append(`<img src="${e.target.result}" alt="미리보기" class="img-preview">`);
-							
-							// 미리보기 영역에 추가
-							$("#imgPreviewArea").append(imgPreview);
-						}
-						
-						// 파일 읽어오기
-						// => 이미지 파일 등 Base64 형식 인코딩 된 데이터를 읽어오기 위해 readAsDataURL() 메서드 활용
-						//    (미리보기나 AJAX 활용한 파일 업로드 등에 활용 가능)
-						reader.readAsDataURL(file);
-					});
-					// -----------------------------------------------------------
-					// 파일 선택 요소 객체의 files 속성에 접근하여 새로운 파일 목록으로 업데이트					
-					$("#custom-file-input")[0].files = newFileList.files;
-					
+					location.href = `/items/${itemId}`;
 				});
 			});
 		</script>

@@ -14,6 +14,8 @@ import com.itwillbs.db.members.service.MemberService;
 
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @Controller
 @Log4j2
@@ -46,6 +48,11 @@ public class MemberController {
 		return "redirect:/";
 	}
 		
+
+	@GetMapping("/login")
+	public String loginForm() {
+		return "/members/member_login_form";
+	}
 	
 }
 
