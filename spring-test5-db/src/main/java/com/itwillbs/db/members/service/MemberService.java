@@ -47,7 +47,7 @@ public class MemberService {
 		Member member = memberDTO.toEntity();
 		
 		// 3) Member 엔티티에 공통코드(사용자 계정 유형) 추가
-		member.addRole(commonCode); // 임시로 test() 메서드 사용 -> addRole() 인식 안 됨
+		member.test(commonCode); // 임시로 test() 메서드 사용 -> addRole() 인식 안 됨
 		
 		// MemberRepository - save() 메서드 호출하여 등록 요청
 		Member resultMember = memberRepository.save(member);

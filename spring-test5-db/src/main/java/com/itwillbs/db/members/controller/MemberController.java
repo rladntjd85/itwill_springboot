@@ -3,6 +3,7 @@ package com.itwillbs.db.members.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,8 +15,6 @@ import com.itwillbs.db.members.service.MemberService;
 
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.web.bind.annotation.RequestParam;
-
 
 @Controller
 @Log4j2
@@ -30,10 +29,11 @@ public class MemberController {
 	@GetMapping("/regist")
 	public String registForm(MemberDTO memberDTO, Model model) {
 		model.addAttribute("memberDTO", memberDTO);
+		
 		return "/members/member_regist_form";
 	}
 	
-	@PostMapping("")
+	@PostMapping("/regist")
 	public String registMember(@ModelAttribute("memberDTO") @Valid MemberDTO memberDTO, BindingResult bindingResult, Model model) {
 		if(bindingResult.hasErrors()) {
 			return "/members/member_regist_form";
@@ -47,12 +47,17 @@ public class MemberController {
 		// 임시) 메인페이지로 리다이렉트
 		return "redirect:/";
 	}
-		
-
+	
+	// 로그인 폼에서 아이디 기억하기 쿠키 사용을 위해 메서드 파라미터로 @CookieValue 어노테이션을 활용하여 변수 선언
 	@GetMapping("/login")
-	public String loginForm() {
+	public String loginForm(@CookieValue(value = "remember-id", required = false) String rememberId, Model model) {
+		// 쿠키값 Model 객체에 추가
+		model.addAttribute("rememberId", rememberId);
+		
 		return "/members/member_login_form";
 	}
+	
+	
 	
 }
 

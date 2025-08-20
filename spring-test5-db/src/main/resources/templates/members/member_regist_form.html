@@ -32,7 +32,7 @@
 	<section layout:fragment="content">
 		<h3>상품 등록</h3>
 		<div id="registForm">
-			<form th:action="@{/members}" th:object="${memberDTO}" method="post">
+			<form th:action="@{/members/regist}" th:object="${memberDTO}" method="post">
 				<table border="1">
 					<tr>
 						<th>이름</th>
@@ -66,6 +66,9 @@
 						<td colspan="2"><input type="submit" value="등록"></td>
 					</tr>
 				</table>
+				<!-- POST 방식 form 태그에서 입력값 전송 시 CSRF 공격 방지를 위한 값을 함께 포함하여 전송해야함(서버로부터 자동으로 전달됨) -->
+				<!-- 구버전의 스프링시큐리티 사용 시 수동으로 값 포함하여 전송해야하지만 현재 버전은 자동으로 전송됨 -->
+<!-- 				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"> -->
 			</form>
 		</div>
 	</section>

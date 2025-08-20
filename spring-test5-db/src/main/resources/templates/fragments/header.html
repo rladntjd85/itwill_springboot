@@ -2,16 +2,60 @@
 		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 		layout:fragment="header">
 	<nav class="nav-bar">
+		<!-- 
+		[ 사용자 권한에 따른 메뉴 출력 여부 결정 ]
+		- 현재 페이지 또는 레이아웃 페이지에 타임리프 스프링 시큐리티(sec) 네임스페이스 추가 필요
+		- 추가된 sec 네임스페이스를 활용하여 권한 체크를 위한 메서드 호출 가능
+		  => 기본 문법 : sec:authorize="메서드명([파라미터...])" 형태로 지정
+		     1) 특정 권한 1개 체크 : sec:authorize="hasAuthority("권한명")
+		     2) 특정 권한 복수개 체크 : sec:authorize="hasAnyAuthority("권한명1, 권한명2, ...")"
+		     3) 로그인 하지 않은 사용자 : sec:authorize="isAnonymous()"
+		     4) 로그인 한 사용자 : sec:authorize="isAuthenticated()"
+		-->
 		<ul class="nav-center">
 			<!-- 상품 관련 메뉴 -->
-			<li><a th:href="@{/items/categories}">카테고리</a>
+<!-- 			<li><a th:href="@{/items/categories}">카테고리</a> -->
+			<!-- 상품목록 메뉴는 누구에게나 보이게 설정(sec:authorize 설정 생략) -->
 			<li><a th:href="@{/items/list}">상품목록</a>
-			<li><a th:href="@{/items/new}">상품등록</a>
+			<!-- 상품목록2 메뉴는 로그인 한 사용자에게만 표시 -->
+			<li sec:authorize="isAuthenticated()"><a th:href="@{/items/list}">상품목록2</a>
+			<!-- 상품등록 메뉴는 관리자(ADMIN) 에게만 표시 -->
+<!-- 			<li sec:authorize="hasAuthority('ADMIN')"><a th:href="@{/items/new}">상품등록</a> -->
+			<!-- 상품등록 메뉴는 관리자(ADMIN) 와 보조관리자(ADMIN_SUB) 에게만 표시 -->
+			<li sec:authorize="hasAuthority('ADMIN')"><a th:href="@{/items/new}">상품등록</a>
 		</ul>
 		<ul class="nav-right">
 			<!-- 회원 관련 메뉴 -->
-			<li><a th:href="@{/members/login}">로그인</a>
-			<li><a th:href="@{/members/regist}">회원가입</a>
+			<li sec:authorize="isAnonymous()"> <!-- 로그인 하지 않은 사용자만 허용 -->
+				<a th:href="@{/members/login}">로그인
+			</a>
+			<li sec:authorize="isAnonymous()"> <!-- 로그인 하지 않은 사용자만 허용 -->
+				<a th:href="@{/members/regist}">회원가입
+			</a>
+			<li sec:authorize="isAuthenticated()"> <!-- 로그인 한 사용자만 허용 -->
+				<a th:href="@{/members/logout}">로그아웃</a>
+			</li>
+			<!-- 타임리프 내장객체(#authentication)를 통해 인증 정보 객체(UserDetails 객체)에 접근 가능 -->
+			<!-- #authentication.name 형식으로 인증정보 중 username 값에 접근 가능하고, #authentication.principal.xxx 형식으로 UserDetails 객체에 접근 가능 -->
+			<!-- authentication.name 지정 시 UserDeitails.getUsername() 메서드가 호출됨 -->
+			<!-- authentication.principal.name 지정 시 UserDetails.getName() 메서드가 호출됨 -->
+			<li sec:authorize="isAuthenticated()">
+				<a th:href="@{/members/profile}" th:text="|${#authentication.principal.name} (${#authentication.name})|"></a>
+			</li>
 		</ul>
 	</nav>
 </th:block>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

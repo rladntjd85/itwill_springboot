@@ -32,21 +32,29 @@
 	<section layout:fragment="content">
 		<h3>로그인</h3>
 		<div id="registForm">
-			<form th:action="@{/members/login}"  method="post">
+			<form th:action="@{/members/login}" method="post">
 				<table border="1">
 					<tr>
-						<th>E-Mail</th>
+						<th>이메일주소</th>
 						<td>
-							<input type="text" name="email" required>
+							<!-- 아이디 기억하기 쿠키값 있을 경우 표시  -->
+							<input type="text" name="email" th:value="${rememberId}" required>
 						</td>
 					</tr>
 					<tr>
 						<th>비밀번호</th>
 						<td>
+<!-- 							<input type="password" name="password" required> -->
 							<input type="password" name="passwd" required>
 						</td>
 					</tr>
-					
+					<tr>
+						<td colspan="2">
+							<!-- rememberId 값이 null 이 아니면 아이디 기억하기 체크박스 체크 -->
+							<input type="checkbox" name="remember-id" th:checked="${rememberId != null}">아이디 기억하기
+							<input type="checkbox" name="remember-me">로그인 유지
+						</td>
+					</tr>
 					<tr>
 						<td colspan="2"><input type="submit" value="로그인"></td>
 					</tr>

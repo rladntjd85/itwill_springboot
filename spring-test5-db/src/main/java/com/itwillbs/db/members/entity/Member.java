@@ -49,7 +49,7 @@ public class Member {
 	private LocalDate regDate; // 가입일자(엔티티 생성 시 자동 등록)
 	
 	// --------------------------------------------
-	// 사용자(Member)는 사용자권한(CommonCode)과 N:M 관계
+	// 사용자(Member)는 사용자권한(CommonCode)과 N:M t관계
 	// 그러나, 완충작용을 담당할 MemberRole 엔티티를 정의했으므로 Member 와 MemberRole 은 1:N 관계
 	// => @OneToMany 어노테이션으로 1:N 관계 지정
 	// 1) mappedBy = "member" 지정 시 현재 엔티티가 연관관계의 주인이 아니므로 상대방의 필드 지정하여 해당 필드 기준으로 매핑 수행

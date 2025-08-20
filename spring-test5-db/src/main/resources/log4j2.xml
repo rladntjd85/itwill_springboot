@@ -78,7 +78,7 @@
 		<!-- Root 로거 설정 - 기본 출력되는 시스템 로그 담당 -->
 		<!-- level 속성 사용하여 출력할 심각도 범위 지정(TRACE < DEBUG < INFO < WARN < ERROR < FATAL) -->
 		<!-- level 값을 OFF 설정 시 해당 로그 끄기 -->
-		<Root level="INFO"> <!-- INFO 이상의 심각도 레벨의 로그 출력(INFO < WARN < ERROR < FATAL) -->
+		<Root level="WARN"> <!-- INFO 이상의 심각도 레벨의 로그 출력(INFO < WARN < ERROR < FATAL) -->
 			<!-- <AppenderRef> 태그 사용하여 설정된 로그 중 출력 대상 지정(ref 속성값으로 Appenders 내의 각 태그 name 속성값 지정) -->
 			<AppenderRef ref="console" /> <!-- Root 로거의 INFO 레벨 이상 메세지들을 콘솔에 출력 -->
 			<AppenderRef ref="rollingFile2" /> Root 로거 메세지들을 외부 파일에 출력
@@ -96,7 +96,7 @@
 		</Logger>
 		
 		<!-- 하이버네이트 관련 로그 설정 -->
-		<Logger name="org.hibernate" level="WARN" additivity="false">
+		<Logger name="org.hibernate" level="INFO" additivity="false">
 			<AppenderRef ref="console" /> 
 			<AppenderRef ref="rollingFile2" /> <!-- Root 로거 메세지들을 외부 파일에 출력 -->
 		</Logger>
