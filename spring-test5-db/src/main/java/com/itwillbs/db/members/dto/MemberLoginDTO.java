@@ -1,5 +1,6 @@
 package com.itwillbs.db.members.dto;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,15 +18,17 @@ import lombok.extern.log4j.Log4j2;
 
 // 로그인 인증에 사용될 인증 전용 DTO 클래스 정의(선택사항) => MemberDTO 그대로 사용도 가능함
 // => 자동으로 현재 클래스가 인증용으로 사용되려면 반드시 스프링 시큐리티에서 제공하는 UserDetails 인터페이스를 구현해야함
+// => 주의! 스프링 시큐리티에서 필요에 따라 세션을 직렬화/역직렬화 해야하므로 인증 객체를 Serializable 인터페이스 구현체로 선언해야함
+//    또한, 인증 객체가 참조하는 다른 사용자 클래스가 있을 경우 해당 클래스들도 모두 Serializable 인터페이스 구현체로 선언해야함
 @Getter
 @Setter
 @ToString
 @Log4j2
-public class MemberLoginDTO implements UserDetails {
+public class MemberLoginDTO implements UserDetails, Serializable {
 	private String email;
 	private String passwd;
 	private String name;
-	private List<MemberRole> roles; // 사용자 권한 목록
+	private List<MemberRole> roles; // 사용자 권한 목록 => MemberRole(사용자 클래스)도 직렬화 클래스로 선언해야함
 	// -----------------------------------------------
 	// 필수 오버라이딩 메서드
 	// 1) 사용자의 권한 목록을 리턴하는 메서드

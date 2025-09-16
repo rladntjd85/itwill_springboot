@@ -23,11 +23,15 @@ public class WebSecurityConfig {
 	 * => Spring Security 5.4 버전부터 도입된 새로운 방식으로 SecurityFilterChain 에 등록하지 않을 요청을 지정할 수 있도록 해 준다!
 	 * => 즉, 여기서 지정하는 경로들은 스프링 시큐리티 보안 필터 자체를 적용받지 않음
 	 */
-	@Bean
-	public WebSecurityCustomizer ignoreStaticResources() { // 메서드 이름 무관
-		return (web) -> web.ignoring() // web 객체에 대한 보안 필터 무시
-				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()); // 일반적인 정적 리소트 경로 모두 지정(css, js, images, error 등)
-	}
+//	@Bean
+//	public WebSecurityCustomizer ignoreStaticResources() { // 메서드 이름 무관
+//		return (web) -> web.ignoring() // web 객체에 대한 보안 필터 무시
+//				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()); // 일반적인 정적 리소트 경로 모두 지정(css, js, images, error 등)
+//	}
+	// => 2025-09-16 11:42:57 WARN [org.springframework.security.config.annotation.web.builders.WebSecurity]You are asking Spring Security to ignore org.springframework.boot.autoconfigure.security.servlet.StaticResourceRequest$StaticResourceRequestMatcher@7131738d. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.
+	// => 현재 스프링 시큐리티 버전에서는 이 기능 대신 permitAll() 을 통해 필터링을 적용하되 허용하는 방식을 권장할 때 이 경고메세지 표시됨
+	// => .authorizeHttpRequests() 메서드에서 허용 경로로 등록하도록 변경
+	
 
 	// ============================================================================
 	// 시큐리티 필터 설정
@@ -48,7 +52,10 @@ public class WebSecurityConfig {
 //					.requestMatchers("/").permitAll() // 프로젝트 루트 경로는 누구나 접근 가능하도록 지정
 //					.requestMatchers("/", "/members/regist", "/items/list").permitAll() // 루트, 회원가입, 상품목록 페이지는 권한 없이 이용 가능
 					.requestMatchers("/items/new").authenticated() // 상품등록 경로는 로그인 한 사용자만 접근 가능
-					.requestMatchers("/", "/members/regist", "/items/**").permitAll() // 루트, 회원가입, 나머지 상품관련 모든 페이지는 권한 없이 이용 가능
+					.requestMatchers("/items/registAjax").authenticated()
+					.requestMatchers("/", "/members/regist", "/members/checkLogin", "/items/**").permitAll() // 루트, 회원가입, 나머지 상품관련 모든 페이지는 권한 없이 이용 가능
+					// 정적 리소스 경로를 아예 무시(web.ignoring())하는 대신 필터링 항목에서 전체 허용으로 지정
+					.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 					.anyRequest().authenticated() // 그 외의 모든 요청은 인증된 사용자만 접근 가능하도록 지정
 					// => 인증받지 않은 사용자는 아래의 formLogin() 메서드 내의 loginPage() 메서드에 지정된 경로를 요청하여 로그인 페이지로 이동시킴
 				)
@@ -68,8 +75,8 @@ public class WebSecurityConfig {
 				)
 				// -------------- 로그아웃 처리 ------------
 				.logout(logoutCustomizer -> logoutCustomizer
-//					.logoutUrl("/members/logout")
-					.logoutRequestMatcher(new AntPathRequestMatcher("/members/logout")) // 로그아웃 요청에 사용될 URL 지정
+					.logoutUrl("/members/logout") // 기본적으로 POST 방식 요청을 감지하여 처리
+//					.logoutRequestMatcher(new AntPathRequestMatcher("/members/logout")) // 로그아웃 요청에 사용될 URL 지정
 					.logoutSuccessUrl("/") // 로그아웃 성공 후 루트로 리다이렉트
 					.permitAll() // 로그아웃 요청에 활용되는 URL 을 허용 주소로 지정
 				)
@@ -77,6 +84,7 @@ public class WebSecurityConfig {
 				.rememberMe(rememberMeCustomizer -> rememberMeCustomizer
 					.rememberMeParameter("remember-me") // 자동 로그인 수행하기 위핸 체크박스 파라미터명 지정(체크 여부 자동으로 판별)
 					.tokenValiditySeconds(60 * 60 * 24) // 자동 로그인 토큰 유효기간 설정(기본값 14일 => 1일로 변경)
+					.key("my-fixed-secret-key") // 서버 재시작 시에도 이전과 동일한 키 사용(= 자동 로그인이 풀리지 않도록)
 				)
 				.build();
 	}

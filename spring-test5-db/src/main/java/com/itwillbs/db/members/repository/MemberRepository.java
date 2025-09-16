@@ -25,10 +25,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 	// email 을 기준으로 Member 엔티티와 함께 사용자 권한(MemberRole) 엔티티도 함께 조회될 수 있도록 JPQL 작성
 	@Query("SELECT m FROM Member m" // 주의! FROM 절 뒤에는 테이블명 member 가 아닌 엔티티 Member 로 지정
 			+ " JOIN FETCH m.roles r" // Member 엔티티와 roles 컬렉션에 해당하는 MemberRole 엔티티를 즉시 로딩(EAGER) 하여 가져옴(즉, JOIN FETCH 는 연관된 엔티티까지 한번에 SELECT)
-			+ " JOIN FETCH r.role" // 중간 엔티티에 해당하는 통해 CommonCode 엔티티를 다시 JOIN 해서 가져오기
+			+ " JOIN FETCH r.role" // 중간 엔티티에 해당하는 MemberRole 엔티티 통해 CommonCode 엔티티를 다시 JOIN 해서 가져오기
 			+ " WHERE m.email = :email") // Member 엔티티의 email(m.email)과 메서드 파라미터 email(:email)이 같은 조건 설정
 	Optional<Member> findByEmailWithRoles(@Param("email") String email); // email 파라미터를 JPA 에서 접근 가능하도록 @Param 어노테이션 지정(패키지 주의!)
-
+	
 }
 
 

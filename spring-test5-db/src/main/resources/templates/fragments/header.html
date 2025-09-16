@@ -13,6 +13,8 @@
 		     4) 로그인 한 사용자 : sec:authorize="isAuthenticated()"
 		-->
 		<ul class="nav-center">
+			<li><a th:href="@{/}">HOME</a>
+			
 			<!-- 상품 관련 메뉴 -->
 <!-- 			<li><a th:href="@{/items/categories}">카테고리</a> -->
 			<!-- 상품목록 메뉴는 누구에게나 보이게 설정(sec:authorize 설정 생략) -->
@@ -33,7 +35,10 @@
 				<a th:href="@{/members/regist}">회원가입
 			</a>
 			<li sec:authorize="isAuthenticated()"> <!-- 로그인 한 사용자만 허용 -->
-				<a th:href="@{/members/logout}">로그아웃</a>
+<!-- 				<a th:href="@{/members/logout}">로그아웃</a> -->
+				<!-- 로그아웃 요청 시 스프링 시큐리티의 logoutUrl() 메서드로 처리하려면 POST 방식으로 요청해야함 -->
+				<a href="javascript:void(0)" onclick="requestLogout()">로그아웃</a>
+				<form th:action="@{/members/logout}" method="post" id="logoutForm"></form>
 			</li>
 			<!-- 타임리프 내장객체(#authentication)를 통해 인증 정보 객체(UserDetails 객체)에 접근 가능 -->
 			<!-- #authentication.name 형식으로 인증정보 중 username 값에 접근 가능하고, #authentication.principal.xxx 형식으로 UserDetails 객체에 접근 가능 -->
@@ -43,7 +48,309 @@
 				<a th:href="@{/members/profile}" th:text="|${#authentication.principal.name} (${#authentication.name})|"></a>
 			</li>
 		</ul>
+		<div id="alarm-wrapper">
+			<img src="/images/alarm.png" id="alarm-image" />
+			<span id="alarm-badge"></span>
+		</div>
 	</nav>
+	
+	<!-- 웹소켓 관련 스크립트들은 로그인 한 경우에만 로딩 -->
+	<th:block sec:authorize="isAuthenticated()">
+		<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+		
+		<script>
+			// 모든 페이지에 공통으로 포함되는 header.html 에서 웹소켓(STOMP) 객체를 전역으로 관리
+			// 현재 페이지에서 웹소켓 연결 및 해제 등의 처리를 담당
+			// 서버 또는 각 개별 페이지에서 전송되는 메세지 처리
+			// ---------------------------------------------------------
+			// 1) STOMP 클라이언트 객체 저장용 변수(= 웹소켓 통신용)
+			let stompClient = null;
+			// 2) STOMP 구독 정보 저장용 변수
+			let subscriptions = {};
+			// 3) 웹소켓 연결 전 요청된 구독 정보들을 임시 저장할 배열(리스트)
+			let pendingSubscriptions = [];
+			// 4) 웹소켓 연결 전 요청된 메세지를 임시 저장할 배열(리스트)
+			let pendingMessages = [];
+			// 5) 웹소켓 연결 여부 저장용 변수(플래그)
+			let isConnected = false;
+			// 6) 기존 구독 정보를 저장할 배열(리스트)
+			let subscribes = [];
+			// 7) 웹소켓 연결 끊어졌을 때 사용할 변수
+			let reConnectInterval = 3000; // 재접속 시간 간격(3000ms = 3초)
+			let reConnecting = false; // 재접속 요청 중복 방지를 위한 플래그
+			
+			// 8) 웹소켓 재연결 여부를 결정하기 위한 사용자 로그아웃 여부를 저장하는 플래그
+			let isLogout = false; // 사용자 로그아웃 시 true 로 변경
+			// ------------------------------------------------------------------
+			$(function() {
+				// 페이지 로딩 시 최초 1회 웹소켓 연결 요청
+				connectWebSocket();
+			});
+			
+			function connectWebSocket() {
+				// 재접속 중복 요청 방지를 위해 reConnecting 변수값이 true(재접속 중복 요청) 이면 작업 중단
+				if(reConnecting) return;
+				// 재접속 중복 요청이 아닐 경우 reConnecting 변수값을 true 로 변경
+				reConnecting = true;
+				
+				// SockJS 객체 생성하여 웹소켓 연결(= 서버의 엔드포인트와 연결 = WebSocketConfig 에서 registry.addEndpoint("/ws") 부분으로 설정)
+				// => SockJS 사용하는 이유는 웹소켓 프로토콜은 최신 브라우저에서는 잘 동작하지만 IE 계열의 구형 브라우저에는 동작하지 않을 수 있음
+				//    또한, 서버 방화벽에 의해 웹소켓 관련 포트가 차단되는 경우도 있음
+				// => 이런 상황에서 SockJS 사용할 경우 웹소켓 연결을 시도한 후 지원되지 않는 프로토콜일 경우
+				//    차선책으로 다른 프로토콜을 자동으로 선택해준다!
+				let socket = new SockJS("/ws"); // 서버의 웹소켓(STOMP) 엔드포인트 설정 주소를 지정
+				
+				// SockJS 에 의해 선택된 웹소켓 관련 프로토콜을 STOMP 프로토콜로 매핑
+				stompClient = Stomp.over(socket); // socket 에 저장된 웹소켓 관련 객체 위에서 STOMP 객체가 동작
+				
+				// -----------------------------------
+				// 기존 구독 정보 복원
+				// subscribes 배열(리스트) 반복하면서 리스트 내의 객체 1개씩 꺼내서 구독 요청
+				subscribes.forEach(function(sub) {
+					// subscribe() 함수 호출하여 구독 요청(채널 아이디와 콜백 함수 그대로 전달)
+					subscribe(sub.roomId, sub.callback);
+				});
+				// -----------------------------------
+				// STOMP 를 통해 서버와 연결 시도
+				stompClient.connect(
+					{ // 헤더 정보
+						// CSRF 토큰 정보를 헤더로 전달
+						"X-CSRF-TOKEN" : "${_csrf.token}"
+					},
+					function(frame) { // 웹소켓 연결 성공 시 호출되는 콜백 함수
+						// 연결 성공 시 콜백함수로 전달되는 응답데이터가 frame 파라미터에 저장됨 => 콘솔에 출력
+						console.log("Connected : " + frame);
+						
+						// 연결 상태 플래그 true, 재접속 진행 여부(중복 방지) 플래그 false 로 변경
+						isConnected = true;
+						reConnecting = false;
+						
+						// -----------------------------------
+						// 웹소켓 연결 완료 전 이미 요청된 구독 및 메세지 전송 대기열 처리
+						// 1) 구독 대기열 처리
+						// => pendingSubscriptions 배열 반복하면서 내부 객체의 id 와 callback 값을 subscribe 함수에 전달
+						pendingSubscriptions.forEach(function(sub) {
+							subscribe(sub.roomId, sub.callback);
+						});
+						
+						// 구독 대기열 초기화
+						pendingSubscriptions = [];
+						
+						// 2) 메세지 전송 대기열 처리
+						// => pendingMessages 배열 반복하면서 내부 객체의 id 와 messageContent 값을 sendMessage 함수에 전달
+						pendingMessages.forEach(function(msg) {
+							sendMessage(msg.roomId, msg.messageContent);
+						});
+						
+						// 메세지 대기열 초기화
+						pendingMessages = [];
+						// -----------------------------------
+						// 전역 알림을 위한 구독 채널("/topic/noti") 구독 요청
+						subscribe("noti");
+					}, 
+					function(error) { // 웹소켓 연결 실패 시 호출되는 콜백 함수
+						console.log("STOMP 연결 실패! - ", error);
+					
+						// 웹소켓 재접속을 수행할 함수 호출
+						handleReConnect();	
+					}
+				); // 웹소켓(STOMP) 서버 연결(stompClient.connect()) 끝
+				// =====================================================
+				// 웹소켓 서버 연결 끊어짐 감지 핸들링
+				socket.onclose = function() {
+// 					alert("서버 연결 끊어짐!");
+					console.log("서버 연결 끊어짐!");
+					
+					isConnected = false;
+					
+					// 사용자가 로그아웃 요청 시 접속 재시도 하지 않음
+					if(isLogout) {
+						return;
+					}
+					
+					// 웹소켓 재접속을 수행할 함수 호출
+					handleReConnect();	
+				}; // 웹소켓 서버 연결 끊어짐 감지(socket.onclose) 끝
+					
+				
+			} // 웹소켓 연결 처리(connectWebSocket()) 끝
+			// ==============================================================================================
+			// 특정 주소(채널)을 구독하는 함수 정의
+			// => 첫번째 파라미터 : 구독할 주소(/topic/xxx 의 xxx 전달받음)(필수)
+			//    두번째 파라미터 : 구독 요청 처리 후 호출할 콜백 함수(전달받지 않을 수도 있음)
+			function subscribe(roomId, callback) {
+				// 아직 웹소켓 연결이 되지 않은 경우 구독 요청 정보를 대기열에 추가
+				if(!isConnected) {
+					pendingSubscriptions.push({
+						// 구독 주소와 콜백 함수를 객체 형태로 대기열에 추가
+						roomId: roomId,
+						callback: callback
+					});
+					// 웹소켓 연결 전이므로 대기열에 추가 후 작업 중단
+					return;
+				}
+				// ------------------------------
+				// 웹소켓 연결이 된 상태일 때
+				// 요청한 주소가 이미 구독중일 경우 기존 구독 해제(중복 구독 제거 위함)
+				if(subscriptions[roomId]) {
+					// roomId 에 해당하는 Stomp Client 객체의 unsubscribe() 메서드 호출하여 구독 해제
+					subscriptions[roomId].unsubscribe();
+				}
+				
+				// 새로운 구독 정보를 설정하여 구독 요청 및 해당 정보를 구독 정보 저장 객체(subscriptions)에 저장
+				// => 구독 요청을 위해 Stomp Client 객체의 subscribe() 메서드 활용
+				// => subscribe(구독요청주소, 구독요청 처리 후 해당 주소로 메세지가 전송되면 호출될 콜백함수)
+				subscriptions[roomId] = stompClient.subscribe("/topic/" + roomId, function(result) {
+					// "/topic/xxx(id)" 형태로 구독 요청 전송하여 서버 STOMP 에서 구독 처리를 수행 후 응답메세지가 콜백함수로 전달됨
+					// 수신된 정보를 JSON 형태로 파싱 처리
+					console.log("구독 요청 완료 - 서버로부터 메세지 수신");
+					console.log(result);
+					
+					// 응답 데이터의 body 값을 JSON 으로 변환
+					let msg = JSON.parse(result.body);
+					
+					// 만약, 구독 주소(채널)에 따라 다른 처리가 필요할 경우
+					if(roomId == "noti") { // 전역 알림
+						// 전역 알림을 처리할 processNotification 함수 호출
+						processNotification(msg);
+					} else { // 채팅 메세지
+						// 현재 채팅방의 메세지인지 판별
+						if($("#selectRoom").val() === msg.roomId) {
+							// 콜백함수(function showMessage(message) {}) 호출하여 채팅 메세지 전달
+							callback(msg);
+						} else {
+							// 메세지 타입을 새로운 메세지로 설정(기존 채팅 메세지에서는 메세지 타입 설정 안했음)
+							msg.messageType = "NOTIFICATION/newMessage";
+							// 전역 알림을 처리할 processNotification 함수 호출
+							processNotification(msg);
+						}
+					}
+				});
+				
+				// 구독목록(subscribes 배열)에 새 구독 채널 저장(웹소켓 재연결 시 구독 복원에 사용됨)
+				// 리스트(배열)의 some() 메서드 호출하여 배열 요소를 하나씩 꺼내 특정 조건을 판별하고
+				// 조건이 하나라도 만족하면 true 값을 리턴
+				let exists = subscribes.some(sub => sub.roomId == roomId); // 구독 목록 객체 내의 id 와 구독 요청 id 값이 같으면 true, 다르면 false 리턴 => 반복됨
+				// 최종 결과값이 false 일 경우 일치하는 채널이 없다는 의미
+				if(!exists) { // 구독 요청할 채널이 구독 목록에 포함되어 있지 않을 경우
+					subscribes.push({ // 구독 목록에 구독 정보 객체 저장
+						roomId: roomId,
+						callback: callback
+					});
+				}				
+				
+			} // subscribe 함수 끝
+			// ========================================================
+			// 전역 알림 처리를 수행할 함수
+			function processNotification(msg) {
+				$("#alarm-badge").css("display", "block");
+				
+				// 만약, 메세지의 messageType 값이 "NOTIFICATION" 으로 시작할 경우
+				if(msg.messageType.startsWith("NOTIFICATION")) {
+					if(msg.messageType.endsWith("/newItem")) { // 새 아이템 등록 알림일 경우
+						// 현재 페이지에 상품목록 출력 테이블이 존재하면 해당 테이블 내용 변경할 수 있다!
+						let itemListTable = $("#itemListTable");
+						// 해당 요소 존재 여부는 대상 요소의 length 속성값으로 판별
+						if(itemListTable.length) { // 요소 존재함(0보다 큰 값일 경우 true)
+							itemListTable.after("<div id='newItemAlert'><h3>새 아이템 등록!</h3></div>");
+						
+							setTimeout(function() {
+								$("#newItemAlert").remove();
+							}, 3000); // 3초 뒤에 <div> 요소 삭제
+						} else { // 요소 존재하지 않음(= 다른 페이지)
+							console.log("상품목록 테이블 없음!");
+						}
+					} else if(msg.messageType.endsWith("/newMessage")) { // 새 채팅 메세지일 경우(단, 현재 채팅방이 아닌 메세지만)
+						// 셀렉트박스 옵션 항목 배열로 가져오기
+						$("#selectRoom option").each(function() {
+							console.log(this);
+							if(this.value == msg.roomId) { // 메세지와 동일한 채팅방 옵션 항목일 경우
+								this.classList.add("option-badge"); // option-badge 클래스 추가
+// 								$(this).text($(this).text() + " ●");
+							}
+						});
+						
+					
+					}
+				}
+			} // processNotification 함수 끝
+			// ========================================================
+			// 채팅 메세지 전송 처리 함수
+			function sendMessage(roomId, message) {
+				// 아직 서버에 연결되지 않은 경우 메세지 전송 요청을 대기열에 저장
+				if(!isConnected) {
+					pendingMessages.push({
+						// 구독 주소(아이디)와 메세지를 객체 형태로 대기열에 추가
+						roomId: roomId,
+						message: message
+					});
+					// 웹소켓 연결 전이므로 대기열에 추가 후 작업 중단
+					return;
+				}
+				
+				// 서버에 연결된 상태일 경우 stompClient 객체의 send() 메서드 활용하여 서버측으로 메세지 전송
+				if(stompClient) {
+					// 전송할 메세지 객체 생성
+					let objMessage = {
+							roomId: roomId,
+						message: message
+					};
+					
+					// STOMP 객체를 통해 서버의 메세지 처리 핸들러로 메세지 전송
+					// => 이 때, 전송할 메세지 객체는 JSON 형식 문자열로 변환하여 전송
+					// => 기본 문법 : stompClient.send("메세지전송요청URL", 헤더정보객체, 메세지본문(JSON 문자열 형태로 변환))
+					//    이 때, 메세지 전송 요청 URL 은 WebSocketConfig 에서 설정한 registry.setApplicationDestinationPrefixes("/app"); 항목을 사용
+					stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(objMessage));
+				}
+			}
+			// ========================================================
+			// 웹소켓 재접속 처리 함수
+			function handleReConnect() {
+				// 로그인 상태 확인 후 로그인 되었을 경우에만 재접속 시도, 아니면 세션 만료 처리
+// 				const retries = 3;
+// 				safeCheckLoginStatus(retries, reConnectInterval, function(isLoginUser) {
+// 					if(isLoginUser) { // 사용자가 로그인 상태일 경우(= 서버 접속 끊김)
+// 						console.log("서버 재연결 시도");
+// 					} else { // 사용자가 로그인 상태가 아닐 경우(= 로그인 해제된 경우 = 서버 재시작 또는 세션 만료 등...)
+// 						console.log("세션이 만료되었습니다. 다시 로그인 해 주세요.");
+// 						location.href = "/members/login"; // 로그인 페이지로 이동
+// 					}
+// 				});
+
+				$.ajax({
+					url: "/members/checkLogin",
+					method: "GET",
+					dataType: "json",
+					success: function(data) { // AJAX 요청 성공
+						console.log("로그인 상태값! - " + data.isLoginUser);
+						if(data.isLoginUser) { // 사용자가 로그인 상태일 경우
+							// 즉시 웹소켓 연결 요청
+							connectWebSocket();
+						} else { // 로그인 상태가 아닐 경우
+							alert("세션이 만료되었습니다. 다시 로그인 해 주세요.");
+							location.href = "/members/login"; // 로그인 페이지로 이동
+						}
+						
+					},
+					error: function(xhr, status, error) { // AJAX 요청 실패(서버 재시작 또는 중단 등의 사유)
+						console.log("로그인 상태 확인 실패! - " + error);
+						// 로그인 확인 후 웹소켓에 재연결 하도록 현재 handleReConnect() 함수 재호출(시간 간격 두고 요청)
+						setTimeout(handleReConnect, reConnectInterval);
+					}
+				});
+			}
+			// =========================================================================
+			// 로그아웃 POST 방식 요청(로그아웃 폼 submit 처리)
+			function requestLogout() {
+				if(confirm("로그아웃 하시겠습니까?")) {
+					isLogout = true;
+					$("#logoutForm").submit();
+				}
+			}
+		</script>
+	</th:block>
+	
 </th:block>
 
 

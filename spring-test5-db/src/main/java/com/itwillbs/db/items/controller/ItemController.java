@@ -1,10 +1,14 @@
 package com.itwillbs.db.items.controller;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.itwillbs.db.commons.dto.LotDTO;
+import com.itwillbs.db.commons.dto.NotificationDTO;
 import com.itwillbs.db.items.dto.ItemDTO;
 import com.itwillbs.db.items.dto.ItemImgDTO;
 import com.itwillbs.db.items.service.ItemImgService;
@@ -32,9 +38,14 @@ public class ItemController {
 	private final ItemService itemService;
 	private final ItemImgService itemImgService;
 	
-	public ItemController(ItemService itemService, ItemImgService itemImgService) {
+	// STOMP 메세지 전송을 처리할 SimpMessageTemplate 객체 주입
+	// => 스프링 빈이라면 어디서든 SimpMessageTemplate 객체로 메세지 전송 가능
+	private final SimpMessagingTemplate messagingTemplate;
+	
+	public ItemController(ItemService itemService, ItemImgService itemImgService, SimpMessagingTemplate messagingTemplate) {
 		this.itemService = itemService;
 		this.itemImgService = itemImgService;
+		this.messagingTemplate = messagingTemplate;
 	}
 	// ----------------------------------------------
 	@GetMapping("/new")		
@@ -83,14 +94,57 @@ public class ItemController {
 		Long itemId = itemService.registItem(itemDTO, itemImgFiles);
 		log.info(">>>>>>>>>>>> itemId : " + itemId);
 		
+		// ========================================================================================
+		// SimpMessagingTemplate 객체를 사용하여 웹소켓 연결된 클라이언트의 특정 채널에 메세지 전송
+		NotificationDTO notificationDTO = NotificationDTO.builder()
+				.messageType("NOTIFICATION/newItem")
+				.message("새 상품 등록됨!")
+				.createAt(LocalDateTime.now())
+				.build();
+		// SimpMessagingTemplate 객체의 convertAndSend() 메서드 호출하여 특정 채널 구독자에게 메세지 전송
+		// => 첫번째 파라미터 : 구독 채널 주소("/topic/xxx")
+		//    두번째 파라미터 : 전송할 메세지 => 자동으로 JSON 형식으로 변환 처리됨
+		messagingTemplate.convertAndSend("/topic/noti", notificationDTO);
+		// ========================================================================================
+		
 		// 등록 과정에서 리턴받은 상품아이디값을 /items 경로에 결합하여 상품 상세정보 조회 페이지 리다이렉트
 		return "redirect:/items/" + itemId;
 	}
+	
+	@ResponseBody
+	@PostMapping("/registAjax")
+	public Map<String, Object> registItemAjax(@ModelAttribute("itemDTO") @Valid ItemDTO itemDTO, BindingResult bindingResult, 
+			@RequestParam("itemImgFiles") List<MultipartFile> itemImgFiles, Model model) throws IOException {
+		// 입력값 검증 결과가 true 일 때(= 입력값 오류 있음) 다시 입력폼으로 포워딩
+//		if(bindingResult.hasErrors()) {
+//			// 이 때, Model 객체를 활용하여 ItemDTO 객체나 BindingResult 객체를 저장하지 않아도 자동으로 뷰페이지로 전송됨
+//			return "/items/item_regist_form";
+//		}
+//		
+//		if(itemImgFiles.get(0).isEmpty()) {
+//			model.addAttribute("errorMessage", "최소 한 개 이미지 등록 필수!");
+//			return "/items/item_regist_form";
+//		}
+		// -----------------------------------------------------------------------
+		Long itemId = itemService.registItem(itemDTO, itemImgFiles);
+		log.info(">>>>>>>>>>>> itemId : " + itemId);
+		
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("itemId", itemId);
+		
+		// 등록 과정에서 리턴받은 상품아이디값을 /items 경로에 결합하여 상품 상세정보 조회 페이지 리다이렉트
+//		return "redirect:/items/" + itemId;
+		return responseMap;
+	}
+	
 	// ============================================================
 	// 상품 상세정보 조회 요청 처리
 	// => http://localhost:8085/items/1002 형태로 /items 뒤의 경로로 상품 아이디 전달됨
 	@GetMapping("/{itemId}")
 	public String itemDetail(@PathVariable("itemId") Long itemId, Model model) {
+		LotDTO lotDTO = new LotDTO();
+		itemService.registLot(lotDTO);
+		
 		// ItemService - getItem() 메서드 호출하여 상품 1개 상세정보 조회 요청
 		// => 파라미터 : 상품번호(Long)   리턴타입 : ItemDTO(itemDTO)
 		ItemDTO itemDTO = itemService.getItem(itemId);
@@ -140,6 +194,8 @@ public class ItemController {
 		
 		return "/items/item_list";
 	}
+	
+	
 	
 }
 

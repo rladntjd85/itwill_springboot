@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.itwillbs.db.commons.dto.LotDTO;
 import com.itwillbs.db.items.dto.ItemDTO;
 import com.itwillbs.db.items.dto.ItemImgDTO;
 import com.itwillbs.db.items.entity.Item;
@@ -18,7 +19,9 @@ import com.itwillbs.db.items.repository.ItemRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FetchType;
 import jakarta.validation.Valid;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 @Service
 public class ItemService {
 	private final ItemRepository itemRepository;
@@ -88,6 +91,9 @@ public class ItemService {
 //				.collect(Collectors.toList());
 		
 		return itemMapper.findAllItems();
+	}
+	public void registLot(LotDTO lotDTO) {
+		log.info("★★★★★★★★★★★★★★★ LOT 등록메서드 호출됨!!!!");
 	}
 	
 	

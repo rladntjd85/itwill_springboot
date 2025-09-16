@@ -1,5 +1,9 @@
 package com.itwillbs.db.members.controller;
 
+import java.util.Map;
+
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -9,6 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.db.members.dto.MemberDTO;
 import com.itwillbs.db.members.service.MemberService;
@@ -57,7 +62,19 @@ public class MemberController {
 		return "/members/member_login_form";
 	}
 	
-	
+	// 웹소켓 로그인 여부 확인
+	@ResponseBody
+	@GetMapping("/checkLogin")
+	public Map<String, Object> checkLogin(Authentication authentication) {
+		// 스프링 시큐리티의 Authentication 객체를 주입받아 로그인 상태 판별
+		boolean isLoginUser = 
+				authentication != null && // 인증 객체 존재(필수)
+				authentication.isAuthenticated() && // 로그인 된 사용자(필수)
+				!(authentication instanceof AnonymousAuthenticationToken); // 로그인 된 사용자 중 익명 로그인 사용자가 아닐 경우(선택사항)
+			
+		// Map<String, Object> 타입으로 변환하여 리턴
+		return Map.of("isLoginUser", isLoginUser);
+	}
 	
 }
 

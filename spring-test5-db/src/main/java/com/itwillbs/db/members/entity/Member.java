@@ -1,5 +1,6 @@
 package com.itwillbs.db.members.entity;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @EntityListeners(AuditingEntityListener.class) // 메인클래스에 @EnableJpaAuditing 어노테이션 필요
-public class Member {
+public class Member implements Serializable { // UserDetails 구현체가 참조하는 사용자 정의 클래스이므로 직렬화 클래스로 선언
 	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 	

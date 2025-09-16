@@ -1,4 +1,8 @@
 @charset "UTF-8";
+a {
+	text-decoration: none;	
+}
+
 .nav-bar {
 	display: flex;
 	justify-content: space-between; /* 요소 좌우 끝으로 배치 */
@@ -36,7 +40,30 @@ main table {
 	color: RED;
 }
 
+/* 상단 알림아이콘 */
+#alarm-wrapper {
+	position: relative;
+	display: inline-block;
+	margin-left: 10px;
+}
 
+#alarm-image {
+	width: 25px;
+	height: 25px;
+	vertical-align: bottom;
+}
+
+#alarm-badge {
+	position: absolute;
+	/* 빨간점 우측 하단 고정 */
+	bottom: 0;
+	right: 0;
+	width: 8px;
+	height: 8px;
+	background-color: red;
+	border-radius: 50%;
+	display: none;
+}
 
 
 

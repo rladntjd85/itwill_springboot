@@ -2,3 +2,49 @@
 h3 {
 	text-align: center;
 }
+
+#chatArea {
+	border: 1px solid #ccc;
+	height: 200px;
+	overflow: auto;
+	margin-top: 10px;
+}
+
+.message {
+	margin-top: 5px;
+}
+
+/* 자신의 메세지 */
+.message_align_right {
+	text-align: right;
+}
+
+.message_align_right span {
+	background-color: #FFFF0088;
+}
+
+/* 상대방 메세지 */
+.message_align_left {
+	text-align: left;
+}
+
+.message_align_left span {
+	background-color: #AAAAAA88;
+}
+
+.option-badge::after {
+	content: "●";
+	color: red;
+	margin-left: 5px;
+}
+
+
+
+
+
+
+
+
+
+
+

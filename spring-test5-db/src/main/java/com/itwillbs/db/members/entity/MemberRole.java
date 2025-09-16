@@ -1,5 +1,7 @@
 package com.itwillbs.db.members.entity;
 
+import java.io.Serializable;
+
 import com.itwillbs.db.commons.entity.CommonCode;
 
 import jakarta.persistence.Entity;
@@ -22,19 +24,19 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class MemberRole {
+public class MemberRole implements Serializable { // UserDetails 구현체가 참조하는 사용자 정의 클래스이므로 직렬화 클래스로 선언
 	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 	
 	// Member 엔티티와 연관관계 설정
 	@ManyToOne(fetch = FetchType.LAZY) // 지연로딩
 	@JoinColumn(name = "member_id", nullable = false) // member_role 테이블에 member_id 컬럼을 사용하여 Member 엔티티를 참조(FK 설정)
-	private Member member;
+	private Member member; // => 직렬화 클래스로 선언해야함
 	
 	// CommonCode 엔티티와 연관관계 설정
 	@ManyToOne(fetch = FetchType.LAZY) // 지연로딩
 	@JoinColumn(name = "member_role_id", nullable = false) // common_code 테이블에 member_role_id 컬럼을 사용하여 CommonCode 엔티티를 참조(FK 설정)
-	private CommonCode role;
+	private CommonCode role; // => 직렬화 클래스로 선언해야함
 	
 	// id 를 제외한 Member, CommonCode 엔티티를 초기화하는 생성자 정의
 	public MemberRole(Member member, CommonCode role) {

@@ -5,11 +5,16 @@
 		<!-- 타임리프 템플릿 페이지에서 스프링 시큐리티 관련 기능 사용을 위해 sec 네임스페이스 추가 -->
 <head>
 	<meta charset="UTF-8">
+	<meta name="_csrf_token" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
 	<title>상품 레이아웃</title>
 	
 	<!-- 공통 CSS 영역 -->
 	<!-- 정적 리소스(css, js 파일 등) 지정 시 루트(/) 기본 경로는 static -->
 	<link rel="stylesheet" th:href="@{/css/common.css}" />
+	
+	<!-- 공통 자바스크립트 영역 -->
+	<script th:src="@{/js/jquery-3.7.1.js}"></script>
 </head>
 <body>
 	<!--  공통 헤더 -->
@@ -27,9 +32,6 @@
 	<hr>
 	<!--  공통 푸터 -->
 	<footer th:include="~{fragments/footer}"></footer>
-	
-	<!-- 공통 자바스크립트 영역 -->
-	<script th:src="@{/js/jquery-3.7.1.js}"></script>
 	
 	<!-- 개별 페이지 자바스크립트 영역 -->
 	<th:block layout:fragment="script"></th:block>

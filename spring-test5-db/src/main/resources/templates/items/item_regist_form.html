@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
 		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-		layout:decorate="~{layouts/layout}">
+		layout:decorate="~{layouts/layout}"
+		xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
 	<!-- 개별페이지 CSS 영역 -->
 	<th:block layout:fragment="style">
@@ -108,7 +109,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td colspan="2"><input type="submit" value="등록"></td>
+						<td colspan="2"><input type="submit" value="등록" ><input type="button" id="btnSubmit" value="등록(AJAX)" ></td>
 					</tr>
 				</table>
 			</form>
@@ -188,6 +189,45 @@
 					$("#custom-file-input")[0].files = newFileList.files;
 					
 				});
+			});
+			
+			
+			$('#btnSubmit').on('click', function() {
+	        	console.log("버튼 클릭!");
+			    var form = $('form')[0];
+			    var formData = new FormData(form);
+		
+			    // CSRF 토큰 가져오기
+// 			    var csrfToken = $('input[name="_csrf"]').val(); // 일반 hiddel field
+
+				// meta 태그로 삽입되어 있을 때
+			    let token = $('meta[name="_csrf"]').attr('content');       // 토큰 값
+				let header = $('meta[name="_csrf_header"]').attr('content'); // 헤더 이름
+		
+	        	console.log("AJAX 요청 시작!");
+			    $.ajax({
+			        url: '/items/registAjax',
+			        type: 'POST',
+			        data: formData,
+			        dataType: 'json',
+			        processData: false,  // FormData를 그대로 전송
+			        contentType: false,  // multipart/form-data 자동 설정
+//	 		        headers: {
+//	 		            'X-CSRF-TOKEN': csrfToken  // CSRF 토큰 헤더
+//	 		        },
+// 					beforeSend: function(xhr) {
+// 				        xhr.setRequestHeader(header, token);
+// 				    },
+			        success: function(response) {
+			        	console.log("등록 완료!");
+			            alert("등록 완료");
+			            location.href="/items/detail?boardNum=" + response.boardNum + "&pageNum=1";
+			        },
+			        error: function(xhr, status, error) {
+			            console.error(error);
+			            alert("등록 실패");
+			        }
+			    });
 			});
 		</script>
 	</th:block>

@@ -30,7 +30,7 @@
 </head>	
 <body>
 	<section layout:fragment="content">
-		<h3>상품 등록</h3>
+		<h3>회원 가입</h3>
 		<div id="registForm">
 			<form th:action="@{/members/regist}" th:object="${memberDTO}" method="post">
 				<table border="1">
@@ -63,7 +63,8 @@
 						</td>
 					</tr>
 					<tr>
-						<td colspan="2"><input type="submit" value="등록"></td>
+<!-- 						<td colspan="2"><input type="submit" value="등록"></td> -->
+						<td colspan="2"><input type="button" id="btnSubmit" value="등록"></td>
 					</tr>
 				</table>
 				<!-- POST 방식 form 태그에서 입력값 전송 시 CSRF 공격 방지를 위한 값을 함께 포함하여 전송해야함(서버로부터 자동으로 전달됨) -->
@@ -86,65 +87,40 @@
 				if(msg && msg.trim() != "") {
 					alert(msg);
 				}
-				
 				// =============================================
-				$("#custom-file-input").change(function(event) {
-					// 파일 선택 요소의 선택된 파일 목록 객체 가져오기
-					const files = event.target.files;
-					console.log(files);
-
-					// 참고) 이미지 파일만 필터링(다른 형식의 파일까지 선택했을 경우 미리보기 대상을 이미지 파일로 한정하기 위함)
-					let imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
-					console.log(imageFiles);
+				$("#btnSubmit").on("click", function() {
+					let form = $("form")[0];
+					let formData = new FormData(form);
 					
-					// 임시) 전체 파일 중에서 이미지 파일 목록만 사용
-					// 선택된 파일 갯수 제한
-					// => x개를 초과하면 경고 출력 후 x개 파일을 제외한 나머지 파일 버림
-					const fileCountLimit = 5;
-					if(imageFiles.length > fileCountLimit) {
-						alert("최대 " + fileCountLimit + " 개의 이미지만 첨부 가능!");
-						
-						imageFiles = imageFiles.slice(0, fileCountLimit); // 배열에서 0부터 지정된 갯수만큼 자르고 나머지 버림
-					}
+					// CSRF 토큰 가져오기
+					// <meta name="_csrf" th:content="${_csrf.token}">					
+					let csrfToken = $("meta[name='_csrf_token']").attr("content");
+					let csrfHeader = $("meta[name='_csrf_header']").attr("content");
+					console.log("csrfToken : " + csrfToken);
+					console.log("csrfHeader : " + csrfHeader);
 					
-					console.log(imageFiles);
-					// -----------------------------------------------------------
-					// 기존 프리뷰 영역 초기화
-					$("#imgPreviewArea").html("");
-					
-					// 기존 파일 선택 영역을 교체할 새로운 파일 목록 객체 변경에 사용되는 DataTransfer 객체 생성
-					let newFileList = new DataTransfer();
-					
-					// 이미지 파일 갯수만큼 반복문 수행
-					// 익명함수 파라미터로 파일 요소 인덱스 및 파일 객체 전달받기
-					$.each(imageFiles, function(index, file) {
-						// 현재 파일을 새로운 DataTransfer 객체에 추가
-						newFileList.items.add(file);
-						// ----------------------------------
-						// FileReader 객체 생성 후 파일 읽어와서 미리보기 영역에 표시
-						let reader = new FileReader();
-						
-						// 파일 읽어오는 과정에서 파일 로딩 완료 시 이벤트 핸들링
-						reader.onload = function(e) {
-							console.log(e.target.result);
-							
-							// 미리보기 요소 생성 후 미리보기 영역에 추가
-							const imgPreview = $(`<div class="div-img_preview">`)
-											.append(`<img src="${e.target.result}" alt="미리보기" class="img-preview">`);
-							
-							// 미리보기 영역에 추가
-							$("#imgPreviewArea").append(imgPreview);
+					// AJAX POST(또는 PUT, DELETE, PATCH 등) 요청 시 CSRF 토큰 전송하기
+					$.ajax({
+						url: "/member/join",
+						type: "POST", 
+						data: formData,
+						dataType: "json",
+						processData: false, // 폼 데이터를 그대로 전송
+// 						contentType: false  // enctype="multipart/form-data" 형식일 경우 해당 타입으로 자동 설정
+// 						headers: {
+// 							csrfHeader: csrfToken
+// 						},
+						beforeSend: function(xhr) { // AJAX 실제 요청 전 먼저 요청할 정보(주로 헤더정보)
+							xhr.setRequestHeader(csrfHeader, csrfToken)
+						},
+						success: function(response) {
+							alert("등록 완료!");
+							location.href = "/member/joinSuccess";
+						},
+						error: function(xhr, status, error) {
+							alert("등록 실패!");
 						}
-						
-						// 파일 읽어오기
-						// => 이미지 파일 등 Base64 형식 인코딩 된 데이터를 읽어오기 위해 readAsDataURL() 메서드 활용
-						//    (미리보기나 AJAX 활용한 파일 업로드 등에 활용 가능)
-						reader.readAsDataURL(file);
 					});
-					// -----------------------------------------------------------
-					// 파일 선택 요소 객체의 files 속성에 접근하여 새로운 파일 목록으로 업데이트					
-					$("#custom-file-input")[0].files = newFileList.files;
-					
 				});
 			});
 		</script>

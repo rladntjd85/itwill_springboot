@@ -2,9 +2,9 @@
 <Configuration>
 	<!-- 각 로그에서 사용할 속성값을 Properties 태그 내의 Property 태그로 정의 -->
 	<Properties>
-		<Property name="LOG_DIR">D:/logs/mylog</Property>
+<!-- 		<Property name="LOG_DIR">D:/logs/mylog</Property> -->
 		<!-- 아이티윌 서버 상에서 로그 경로 설정 예시 -->
-<!-- 		<Property name="LOG_DIR">/usr/local/tomcat/logs/mylog</Property> -->
+		<Property name="LOG_DIR">/usr/local/tomcat/logs/mylog</Property>
 
 		<!-- 로그별 출력할 패턴을 정의 -->
 <!-- 		<Property name="LAYOUT_PATTERN">%d{yyyy-MM-dd HH:mm:ss} %-5p: [%c] %m%n</Property> -->
@@ -33,6 +33,21 @@
 		<RollingFile name="rollingFile"
 					fileName="${LOG_DIR}/mylog.log"
 					filePattern="${LOG_DIR}/mylog-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout pattern="${LAYOUT_PATTERN}" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10KB" />
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+			<Filters>
+				<!-- 특정 대상 레벨 로그에 대한 필터링 설정 -->
+				<!-- ERROR 레벨 이상의 로그는 필터링을 통해 제외시키고, 나머지 로그만 출력 -->
+				<ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="ACCEPT" />
+			</Filters>
+		</RollingFile>
+		
+		<RollingFile name="rollingFileForCommons"
+					fileName="${LOG_DIR}/mylog-commons.log"
+					filePattern="${LOG_DIR}/mylog-commons-%d{yyyy-MM-dd}-%i.log">
 			<PatternLayout pattern="${LAYOUT_PATTERN}" />
 			<Policies>
 				<SizeBasedTriggeringPolicy size="10KB" />
@@ -82,6 +97,7 @@
 			<!-- <AppenderRef> 태그 사용하여 설정된 로그 중 출력 대상 지정(ref 속성값으로 Appenders 내의 각 태그 name 속성값 지정) -->
 			<AppenderRef ref="console" /> <!-- Root 로거의 INFO 레벨 이상 메세지들을 콘솔에 출력 -->
 			<AppenderRef ref="rollingFile2" /> Root 로거 메세지들을 외부 파일에 출력
+			<AppenderRef ref="rollingErrorFile" /> <!-- Root 로거 메세지 중 오류메세지들을 외부 파일에 출력 -->
 		</Root>
 		
 		<!-- 현재 프로젝트(애플리케이션) 내의 특정 패키지에 대한 로그 설정 -->
@@ -100,6 +116,17 @@
 			<AppenderRef ref="console" /> 
 			<AppenderRef ref="rollingFile2" /> <!-- Root 로거 메세지들을 외부 파일에 출력 -->
 		</Logger>
+		
+		<!-- Spring Security 패키지 전용 로거 -->
+        <Logger name="org.springframework.security" level="DEBUG" additivity="false">
+<!--         <Logger name="org.springframework.security" level="OFF" additivity="false"> -->
+			<AppenderRef ref="console"></AppenderRef>
+        </Logger>
+        
+        <Logger name="com.itwillbs.db.commons" level="INFO" additivity="false">
+			<AppenderRef ref="console"></AppenderRef>
+			<AppenderRef ref="rollingFileForCommons"></AppenderRef>
+        </Logger>
 	</Loggers>
 	
 </Configuration>

@@ -11,12 +11,119 @@
 <body>
 	<section layout:fragment="content">
 		<h3>메인페이지</h3>
+		<hr>
+		<th:block sec:authorize="isAuthenticated()"> <!-- 로그인 한 사용자만 허용 -->
+			<h3>채팅</h3>
+			<select id="selectRoom">
+				<option value="room1">ROOM 1</option>
+				<option value="room2">ROOM 2</option>
+				<option value="room3">ROOM 3</option>
+			</select>
+			<div id="chatArea"></div>
+			<input type="text" id="inputMsg" placeholder="메세지 입력" />
+			<input type="button" id="btnSend" value="메세지 전송" />
+		</th:block>
 	</section>
 	
 	<th:block layout:fragment="script">
 		<script>
-			console.log("메인페이지의 자바스크립트 영역!");
+			console.log("모든 사용자가 볼 수 있는 스크립트 영역");
 		</script>
+		
+		<th:block sec:authorize="isAuthenticated()"> 
+			<!-- 로그인 한 사용자일 경우에만 로딩되는 스크립트 영역 -->
+			<!-- 타임리프에서 JS 코드 안에 표현식 사용 가능하도록 <script> 태그에 th:inline="javascript" 속성 설정 -->
+			<script th:inline="javascript">
+				let currentRoom; // 채팅방 아이디를 저장할 변수
+				// --------------------------------------------------------
+				// 페이지 로딩 시 채팅방 구독 요청
+				$(function() {
+					// 현재 선택된 채팅방을 기본값으로 설정
+					currentRoom = $("#selectRoom").val();
+					subscribeCurrentRoom();
+					
+					// 셀렉트박스의 채팅방을 변경할 경우 해당 채팅방 구독 요청
+					$("#selectRoom").change(function() {
+						currentRoom = $("#selectRoom").val();
+						subscribeCurrentRoom();
+					});
+					
+					// 채팅 메세지 전송 버튼 클릭 이벤트 핸들링 => requestSendMessage 함수 전달
+					$("#btnSend").click(requestSendMessage);
+					
+					// 채팅 메세지 입력창 keyup 이벤트 핸들링
+					// => 입력된 키가 엔터키(= keyCode 값이 "13")일 경우 requestSendMessage 함수 호출
+					$("#inputMsg").keyup(function(event) {
+						// 이벤트 객체의 keyCode 값이 엔터키(= "13") 인지 판별
+						if(event.keyCode == "13") {
+							requestSendMessage();
+						}
+					});
+				});
+				
+				// --------------------------------------------------------
+				// 채팅방 구독 요청을 위한 함수 정의
+				function subscribeCurrentRoom() {
+	// 				console.log("채팅방 구독 요청! - " + currentRoom);
+					// 채팅 메세지 영역 초기화
+					$("#chatArea").empty();
+					
+					// header.html - function subscribe(id, callback) {} 함수 호출하여 채팅방 구독 요청
+					// => 파라미터 : 요청할 채팅방 아이디, 콜백함수
+					// => 콜백함수로 전달할 익명함수는 파라미터에 서버로부터 전송되는 메세지(= 채팅메세지)를 저장하는 변수 선언
+					subscribe(currentRoom, showMessage);
+				}
+				
+				// --------------------------------------------------------
+				// 채팅 메세지를 표시하는 함수
+				function showMessage(message) {
+					// 스프링시큐리티 인증 객체로부터 사용자명(아이디) 가져와서 저장
+					let userId = /*[[${#authentication.name}]]*/ "anonymous";
+// 					console.log("아이디 : " + userId);
+					// 로그인 한 사용자명(아이디)과 메세지 송신자가 같을 경우, 다를 경우 각각 div 태그 클래스명을 다르게 구분
+					let divMessageType = userId == message.sender ? "message_align_right" : "message_align_left";
+					
+					// 채팅 메세지 출력
+					// 이 때, 메세지 송신자에 따라 서로 다른 class 등록
+					$("#chatArea").append("<div class='message " + divMessageType + "'><span><strong>" + message.sender + "</strong> : " + message.message + "</div>");
+				}
+				// --------------------------------------------------------
+				// 채팅 메세지를 전송하는 함수
+				function requestSendMessage() {
+					let message = $("#inputMsg").val(); 
+					
+					// 만약, 메세지가 입력되지 않았을 경우(= 널스트링) 작업 취소
+					if(!message) {
+						return;
+					}
+					
+					console.log("메세지 전송 준비! - " + message);
+					
+					// header.html 의 sendMessage() 함수(function sendMessage(roomId, message) {}) 호출하여 메세지 전송 요청
+					sendMessage(currentRoom, message);
+					
+					// 메세지 입력창 초기화 및 포커스 요청
+					$("#inputMsg").val(""); 
+					$("#inputMsg").focus(); 
+				}
+				
+			</script>
+		</th:block>
 	</th:block>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

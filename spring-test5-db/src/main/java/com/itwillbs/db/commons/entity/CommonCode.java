@@ -1,5 +1,7 @@
 package com.itwillbs.db.commons.entity;
 
+import java.io.Serializable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +21,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class CommonCode {
+public class CommonCode implements Serializable { // UserDetails 구현체가 참조하는 사용자 정의 클래스이므로 직렬화 클래스로 선언
 	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 	
